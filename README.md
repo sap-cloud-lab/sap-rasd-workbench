@@ -27,4 +27,4 @@ Key outputs:
 
 ## Publishing
 
-GitHub Pages publishes automatically on every push to `main` using `.github/workflows/pages.yml`.
+GitHub Pages publishes from the `main` branch root.
