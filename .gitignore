@@ -1,0 +1,8 @@
+# Local/debug files not needed by GitHub Pages
+recovered-review-state.json
+local-server.mjs
+tools/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
