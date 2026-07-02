@@ -24,6 +24,14 @@
   let cloudEvidenceCache = new WeakMap();
   let publicCloudLoadPromise = null;
   let publicCloudLoadFailed = false;
+  const progressStore = createProgressStore(window.RASD_PROGRESS_STORE);
+  const progressSync = {
+    status: progressStore ? "loading" : "local",
+    label: progressStore?.label || "Local backup",
+    detail: progressStore ? "Loading shared progress" : "Browser cache with recovered backup",
+    lastSavedAt: ""
+  };
+  let sharedProgressSaveTimer = null;
   const customerProfile = {
     country: "Australia",
     countryAliases: ["Australia", "AU"],
@@ -66,6 +74,7 @@
   const priorityFilter = document.querySelector("#priorityFilter");
   const zipInput = document.querySelector("#zipInput");
   const stateInput = document.querySelector("#stateInput");
+  const progressStatus = document.querySelector("#progressStatus");
 
   function normalizeData(input) {
     const data = {
@@ -5161,23 +5170,55 @@
     showToast("Public sector highlights exported");
   }
 
-  function exportProgressState() {
-    const payload = {
+  function createProgressStore(config) {
+    if (!config || config.enabled === false) return null;
+    const endpoint = config.endpoint || config.url || config.loadUrl || config.saveUrl;
+    if (!endpoint) return null;
+    const label = config.label || "Shared progress";
+    const baseHeaders = config.headers || {};
+    return {
+      label,
+      async load() {
+        const response = await fetch(config.loadUrl || endpoint, {
+          method: config.loadMethod || "GET",
+          headers: baseHeaders,
+          cache: "no-store"
+        });
+        if (response.status === 404 || response.status === 204) return {};
+        if (!response.ok) throw new Error(`Progress load failed (${response.status})`);
+        return response.json();
+      },
+      async save(payload) {
+        const response = await fetch(config.saveUrl || endpoint, {
+          method: config.saveMethod || "PUT",
+          headers: { "Content-Type": "application/json", ...baseHeaders },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Progress save failed (${response.status})`);
+      }
+    };
+  }
+
+  function progressPayload(sourceUrl = window.location.href) {
+    return {
       schema: "rasd-workbench-progress",
       version: 1,
-      exportedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       release: state.data.meta.release || customerProfile.release,
       customer: document.querySelector("#customerName")?.textContent?.trim() || "Customer",
-      sourceUrl: window.location.href,
+      sourceUrl,
       reviewState: state.reviewState,
       testState: state.testState
     };
+  }
+
+  function exportProgressState() {
+    const payload = progressPayload();
     downloadJson(`rasd-${payload.release || "release"}-review-progress.json`, payload);
     showToast("Review progress exported");
   }
 
-  async function importProgressState(file) {
-    const payload = JSON.parse(await file.text());
+  function progressStateFromPayload(payload) {
     const reviewState = payload.reviewState || payload["rasd-review-state"] || {};
     const testState = payload.testState || payload["rasd-test-state"] || {};
     if (!reviewState || typeof reviewState !== "object" || Array.isArray(reviewState)) {
@@ -5186,8 +5227,13 @@
     if (!testState || typeof testState !== "object" || Array.isArray(testState)) {
       throw new Error("Test state missing");
     }
+    return { reviewState, testState };
+  }
+
+  async function importProgressState(file) {
+    const { reviewState, testState } = progressStateFromPayload(JSON.parse(await file.text()));
     state.reviewState = mergeReviewStates(state.reviewState, reviewState);
-    state.testState = { ...state.testState, ...testState };
+    state.testState = mergeTestStates(state.testState, testState);
     saveReviewState();
     saveTestState();
     migrateReviewState();
@@ -5203,8 +5249,9 @@
     }
   }
 
-  function saveTestState() {
+  function saveTestState(options = {}) {
     localStorage.setItem("rasd-test-state", JSON.stringify(state.testState));
+    if (options.sync !== false) queueSharedProgressSave("test update");
   }
 
   function entryTime(entry) {
@@ -5224,11 +5271,89 @@
         const incomingTime = entryTime(entry);
         const existingTime = entryTime(existing);
         if (incomingTime && existingTime && incomingTime < existingTime) return;
-        if (entry.status === "review-needed" && existing.status !== "review-needed" && incomingTime <= existingTime) return;
+        if (entry.status === "review-needed" && existing.status !== "review-needed") return;
         merged[key] = { ...existing, ...entry };
       });
       return merged;
     }, {});
+  }
+
+  function mergeTestStates(...sources) {
+    return sources.reduce((merged, source) => {
+      Object.entries(source || {}).forEach(([key, entry]) => {
+        if (!entry || typeof entry !== "object") return;
+        merged[key] = { ...(merged[key] || {}), ...entry };
+      });
+      return merged;
+    }, {});
+  }
+
+  function updateProgressStatus() {
+    if (!progressStatus) return;
+    progressStatus.className = `progress-status ${progressSync.status}`;
+    const suffix = progressSync.lastSavedAt ? ` - ${progressSync.lastSavedAt}` : "";
+    progressStatus.textContent = `Progress: ${progressSync.label}${suffix}`;
+    progressStatus.title = progressSync.detail || "";
+  }
+
+  async function hydrateProgressStore() {
+    if (!progressStore) {
+      progressSync.status = "local";
+      progressSync.label = "local backup";
+      progressSync.detail = "Shared progress store is not configured yet. The recovered backup and browser cache are being used.";
+      updateProgressStatus();
+      return;
+    }
+    progressSync.status = "loading";
+    progressSync.label = progressStore.label;
+    progressSync.detail = "Loading shared progress state";
+    updateProgressStatus();
+    try {
+      const payload = await progressStore.load();
+      const { reviewState, testState } = progressStateFromPayload(payload);
+      state.reviewState = mergeReviewStates(state.reviewState, reviewState);
+      state.testState = mergeTestStates(testState, state.testState);
+      saveReviewState({ sync: false });
+      saveTestState({ sync: false });
+      migrateReviewState({ sync: false });
+      render();
+      progressSync.status = "synced";
+      progressSync.detail = "Shared progress loaded and merged with recovered local state";
+      updateProgressStatus();
+      queueSharedProgressSave("merge");
+    } catch (error) {
+      console.error(error);
+      progressSync.status = "error";
+      progressSync.detail = "Shared progress failed to load. Local recovered backup is still available.";
+      updateProgressStatus();
+      showToast("Shared progress unavailable; using local backup");
+    }
+  }
+
+  function queueSharedProgressSave(reason = "change") {
+    if (!progressStore) {
+      updateProgressStatus();
+      return;
+    }
+    clearTimeout(sharedProgressSaveTimer);
+    progressSync.status = "saving";
+    progressSync.label = progressStore.label;
+    progressSync.detail = `Saving shared progress after ${reason}`;
+    updateProgressStatus();
+    sharedProgressSaveTimer = setTimeout(async () => {
+      try {
+        await progressStore.save(progressPayload("shared-progress-sync"));
+        progressSync.status = "synced";
+        progressSync.lastSavedAt = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        progressSync.detail = "Shared progress saved";
+      } catch (error) {
+        console.error(error);
+        progressSync.status = "error";
+        progressSync.detail = "Shared progress failed to save. Local browser cache still has the change.";
+        showToast("Shared progress save failed");
+      }
+      updateProgressStatus();
+    }, 700);
   }
 
   function loadReviewState() {
@@ -5245,8 +5370,9 @@
     }
   }
 
-  function saveReviewState() {
+  function saveReviewState(options = {}) {
     localStorage.setItem("rasd-review-state", JSON.stringify(state.reviewState));
+    if (options.sync !== false) queueSharedProgressSave("review update");
   }
 
   function reviewableRowsForMigration() {
@@ -5274,7 +5400,7 @@
     ].filter(hasUsefulValues);
   }
 
-  function migrateReviewState() {
+  function migrateReviewState(options = {}) {
     let changed = false;
     reviewableRowsForMigration().forEach((row) => {
       const primary = reviewKey(row);
@@ -5284,7 +5410,7 @@
       state.reviewState[primary] = { ...state.reviewState[alias] };
       changed = true;
     });
-    if (changed) saveReviewState();
+    if (changed) saveReviewState(options);
     return changed;
   }
 
@@ -5558,6 +5684,7 @@
 
   document.querySelector("#exportRegister").addEventListener("click", exportActionRegister);
 
-  migrateReviewState();
+  migrateReviewState({ sync: false });
   render();
+  hydrateProgressStore();
 })();

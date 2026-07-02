@@ -1,5 +1,6 @@
 # Local/debug files not needed by GitHub Pages
 recovered-review-state.json
+rasd-*-recovered-progress.json
 local-server.mjs
 tools/
 

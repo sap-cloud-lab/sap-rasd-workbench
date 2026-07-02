@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>RASD Customer Release Workbench</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css?v=20260702-cloud-alm-guidance-evidence" />
+    <link rel="stylesheet" href="styles.css?v=20260703-progress-store" />
   </head>
   <body data-page="overview">
     <header class="topbar">
@@ -31,6 +31,7 @@
       <button class="primary-action" id="exportRegister" type="button">Export action register</button>
       <button class="secondary-action sync-action" id="exportProgress" type="button">Export progress</button>
       <button class="secondary-action sync-action" id="importProgress" type="button">Import progress</button>
+      <span class="progress-status local" id="progressStatus">Progress: local backup</span>
       <input id="stateInput" type="file" accept=".json" hidden />
     </header>
 
@@ -125,9 +126,10 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="data.js"></script>
-    <script src="review-state-backup.js"></script>
+    <script src="review-state-backup.js?v=20260703-recovered-progress"></script>
+    <script src="progress-store.js?v=20260703-progress-store"></script>
     <script src="extensibility-inventory.js"></script>
     <script src="sap-help-enrichment.js?v=20260628-full-sap-help-harvest"></script>
-    <script src="app.js?v=20260702-cloud-alm-guidance-evidence"></script>
+    <script src="app.js?v=20260703-progress-store"></script>
   </body>
 </html>
