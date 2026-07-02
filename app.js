@@ -53,6 +53,7 @@
     deprecated: { title: "Deprecated and successor objects", kicker: "No duplicate chasing", icon: "6" },
     newfeatures: { title: "New features explorer", kicker: "Useful opportunities", icon: "7" },
     publicsector: { title: "Public sector highlights", kicker: "Australia and PSM focus", icon: "8" },
+    coverage: { title: "AI test coverage builder", kicker: "RASD to test coverage", icon: "9" },
     testplan: { title: "Release test pack", kicker: "Cloud ALM upload", icon: "9" }
   };
 
@@ -1908,6 +1909,7 @@
       deprecated: [...data.deprecatedObjects, ...data.derived.deprecatedUsed],
       newfeatures: data.derived.newUsed,
       publicsector: data.derived.publicSectorHighlights,
+      coverage: targetedTestItems("", { includeFuture: true }),
       testplan: data.derived.tests
     };
     if (page === "scope") return scopeRowsWithDirectChanges(data.usedScopeImpact, data);
@@ -2000,6 +2002,7 @@
     if (state.page === "deprecated") renderDeprecated();
     if (state.page === "newfeatures") renderNewFeatures();
     if (state.page === "publicsector") renderPublicSector();
+    if (state.page === "coverage") renderCoverageBuilder();
     if (state.page === "testplan") renderTestPlan();
   }
 
@@ -2061,6 +2064,7 @@
       deprecated: [["apps", "Apps & catalogs"], ["testplan", "Successor tests"]],
       newfeatures: [["testplan", "Add explore tasks"], ["scope", "Scope context"]],
       publicsector: [["testplan", "Create test pack"], ["newfeatures", "New features"]],
+      coverage: [["testplan", "Open Cloud ALM pack"], ["whatsnew", "Review source changes"]],
       testplan: [["overview", "Back to overview"]]
     };
     const search = state.page === "overview" ? "" : `
@@ -2099,7 +2103,8 @@
       item("deprecated", "Review deprecated items", "Old objects and successors", "5", "warning"),
       item("newfeatures", "Review new features", "Optional items worth exploring", "6", "green"),
       item("publicsector", "Public sector highlights", `${customerProfile.country} and PSM release items`, "7", "teal"),
-      item("testplan", "Build test pack", "Cloud ALM upload workbooks", "8", "blue")
+      item("coverage", "Build test coverage", "What to run, owner, evidence", "8", "blue"),
+      item("testplan", "Build test pack", "Cloud ALM upload workbooks", "9", "blue")
     ];
     return includeHome ? [["overview", "Home", "Choose a review area", "", "0"], ...streams] : streams;
   }
@@ -2166,6 +2171,7 @@
       deprecated: '<path d="M12 3 2 21h20L12 3Z" /><path d="M12 9v5M12 17h.01" />',
       newfeatures: '<path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 16.9 6.6 19.8l1-6.1-4.4-4.3 6.1-.9L12 3Z" />',
       publicsector: '<path d="M4 20h16" /><path d="M6 10v8M10 10v8M14 10v8M18 10v8" /><path d="M3 10h18L12 4 3 10Z" />',
+      coverage: '<path d="M4 5h16" /><path d="M4 12h16" /><path d="M4 19h16" /><path d="m7 5 2 2 4-4" /><path d="m7 12 2 2 4-4" /><path d="M7 19h.01" />',
       testplan: '<path d="M9 4h6l1 2h3v15H5V6h3l1-2Z" /><path d="M9 12l2 2 4-4M9 18h6" />'
     };
     return `<span class="workstream-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${icons[page] || `<text x="12" y="16" text-anchor="middle">${escapeHtml(fallback)}</text>`}</svg></span>`;
@@ -4217,6 +4223,314 @@
     `;
   }
 
+  function renderCoverageBuilder() {
+    const rows = coverageRows();
+    const releaseRows = rows.filter((row) => row.timing === "release");
+    const futureRows = rows.filter((row) => row.timing === "future");
+    const fitSummary = coverageFitSummary(rows);
+    const ownerSummary = coverageOwnerSummary(rows);
+    const status = coverageStatusSummary(rows);
+    const sampleRows = sortCoverageRows(releaseRows).slice(0, 14);
+    pageContent.innerHTML = `
+      <div class="filter-row">
+        <button class="primary-action" type="button" id="downloadTests">Download Cloud ALM workbook</button>
+        <button class="secondary-action" type="button" id="downloadCoverageOwners">Download owner list</button>
+        <button class="secondary-action" type="button" data-jump="testplan">Open detailed test plan</button>
+        <div class="review-summary" aria-label="Coverage summary">
+          <span>${releaseRows.length} run before upgrade</span>
+          <span>${futureRows.length} future adoption</span>
+          <span>${status.done} done</span>
+          <span>${status.blocked} blocked</span>
+        </div>
+      </div>
+      <section class="coverage-builder">
+        <div class="coverage-hero-card">
+          <div>
+            <p class="system-label">Coverage logic</p>
+            <h3>RASD says what changed. This page decides what to test.</h3>
+            <p>It combines customer-used scope, relevance decisions, apps, roles, extensibility, integrations, SAP sources, and Cloud ALM structure into one targeted test-coverage view.</p>
+          </div>
+          <div class="coverage-flow" aria-label="Coverage flow">
+            <span>RASD impact</span>
+            <span>Customer usage</span>
+            <span>Test fit</span>
+            <span>Cloud ALM pack</span>
+            <span>Evidence</span>
+          </div>
+        </div>
+
+        <div class="coverage-kpis">
+          ${coverageKpi("Run before upgrade", releaseRows.length, "Mandatory, critical, deprecated, role, integration, and targeted process checks.", "blue")}
+          ${coverageKpi("SAP automate candidates", fitSummary.sapAutomate || 0, "Standard process checks that should be compared with SAP automates or Process Navigator scripts.", "green")}
+          ${coverageKpi("Manual targeted checks", fitSummary.manual || 0, "Changed screens, apps, fields, or process behavior where a short business walkthrough is enough.", "warning")}
+          ${coverageKpi("Technical checks", (fitSummary.integration || 0) + (fitSummary.extensibility || 0), "API, BTP, communication arrangement, custom CDS, custom logic, and extension validations.", "teal")}
+        </div>
+
+        <div class="coverage-main-grid">
+          <section class="coverage-panel coverage-wide">
+            <div class="coverage-panel-heading">
+              <div>
+                <p class="system-label">Test pack preview</p>
+                <h3>Regression tests you should run</h3>
+              </div>
+              <span>${sampleRows.length} shown</span>
+            </div>
+            <div class="coverage-table-wrap">
+              <table class="data-table coverage-table">
+                <thead><tr><th>Test</th><th>Owner</th><th>Fit</th><th>Why this exists</th><th>Evidence</th><th>Status</th></tr></thead>
+                <tbody>${sampleRows.map(coverageTableRow).join("")}</tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="coverage-panel">
+            <div class="coverage-panel-heading">
+              <div>
+                <p class="system-label">Owner list</p>
+                <h3>Who needs to act</h3>
+              </div>
+            </div>
+            <div class="owner-list">
+              ${ownerSummary.map((owner) => `
+                <article>
+                  <strong>${escapeHtml(owner.owner)}</strong>
+                  <span>${owner.count} tests</span>
+                  <small>${owner.notStarted} not started, ${owner.blocked} blocked</small>
+                </article>
+              `).join("")}
+            </div>
+          </section>
+
+          <section class="coverage-panel">
+            <div class="coverage-panel-heading">
+              <div>
+                <p class="system-label">Automation fit</p>
+                <h3>How each test should run</h3>
+              </div>
+            </div>
+            <div class="fit-grid">
+              ${coverageFitCards(fitSummary)}
+            </div>
+          </section>
+
+          <section class="coverage-panel">
+            <div class="coverage-panel-heading">
+              <div>
+                <p class="system-label">Pass / fail dashboard</p>
+                <h3>Execution status</h3>
+              </div>
+            </div>
+            ${coverageStatusDashboard(status)}
+          </section>
+
+          <section class="coverage-panel">
+            <div class="coverage-panel-heading">
+              <div>
+                <p class="system-label">Evidence checklist</p>
+                <h3>What must be attached</h3>
+              </div>
+            </div>
+            <ul class="coverage-evidence-list">
+              <li>Screenshot before and after upgrade for changed app, field, tile, or page behavior.</li>
+              <li>Role/catalog evidence for deprecated apps, successor apps, spaces, and pages.</li>
+              <li>Payload, response, document number, or message ID for API and integration checks.</li>
+              <li>Activation and reconciliation evidence for CDS, custom logic, BTP, and extensibility checks.</li>
+              <li>SAP source link and reviewer decision for every test included or excluded.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    `;
+  }
+
+  function coverageRows() {
+    return targetedTestItems("", { includeFuture: true }).map((item) => {
+      const recommendation = testRecommendation(item);
+      const fit = coverageFit(item, recommendation);
+      const owner = coverageOwner(item, fit);
+      const saved = state.testState[item.id] || {};
+      return {
+        item,
+        recommendation,
+        fit,
+        owner,
+        status: saved.status || "Not started",
+        timing: recommendation.level === "optional" ? "future" : "release",
+        evidence: coverageEvidence(item, fit)
+      };
+    });
+  }
+
+  function coverageKpi(label, value, text, tone) {
+    return `
+      <article class="coverage-kpi ${escapeHtml(tone)}">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(value)}</strong>
+        <p>${escapeHtml(text)}</p>
+      </article>
+    `;
+  }
+
+  function sortCoverageRows(rows) {
+    const rank = { required: 0, targeted: 1, review: 2, optional: 3, skip: 4 };
+    return [...rows].sort((left, right) => {
+      const level = (rank[left.recommendation.level] ?? 9) - (rank[right.recommendation.level] ?? 9);
+      if (level) return level;
+      const status = left.status.localeCompare(right.status);
+      if (status) return status;
+      return left.item.title.localeCompare(right.item.title);
+    });
+  }
+
+  function coverageFit(item, recommendation) {
+    const text = [item.type, item.title, item.scenario, item.source, item.scope].join(" ").toLowerCase();
+    if (/extensibility|custom cds|custom logic|badi|released cds|developer/.test(text)) {
+      return { key: "extensibility", label: "Extensibility check", tone: "teal", detail: "Manual technical validation" };
+    }
+    if (/api|integration|payload|communication arrangement|btp|destination|iflow/.test(text)) {
+      return { key: "integration", label: "Integration/API check", tone: "teal", detail: "Payload or interface proof" };
+    }
+    if (/role|catalog|iam|authorization|successor|deprecated|deleted|tile|space|page/.test(text)) {
+      return { key: "role", label: "Role/catalog check", tone: "warning", detail: "Access and launchpad proof" };
+    }
+    if (/configuration|sscui|customizing/.test(text)) {
+      return { key: "manual", label: "Manual targeted", tone: "warning", detail: "Config plus one process check" };
+    }
+    if (recommendation.level === "optional") {
+      return { key: "manual", label: "Adoption demo", tone: "green", detail: "Demo only if adopted" };
+    }
+    if (scopeIdsForReview(item).length) {
+      return { key: "sapAutomate", label: "SAP automate candidate", tone: "green", detail: "Compare with SAP automate/script" };
+    }
+    return { key: "manual", label: "Manual targeted", tone: "warning", detail: "Small focused walkthrough" };
+  }
+
+  function coverageOwner(item, fit) {
+    if (fit.key === "integration") return /btp|destination|iflow/i.test([item.title, item.scenario, item.scope].join(" ")) ? "BTP / Integration" : "Integration";
+    if (fit.key === "extensibility") return "Extensibility";
+    if (fit.key === "role") return "Security / IAM";
+    const lobs = scopeIdsForReview(item).map(scopeRowById).filter(Boolean).map((row) => get(row, "Line of Business")).join(", ");
+    const text = [lobs, item.scope, item.title].join(" ").toLowerCase();
+    if (/finance|account|cash|asset|journal|tax/.test(text)) return "Finance";
+    if (/sourcing|procurement|supplier|purchase|ariba/.test(text)) return "Procurement";
+    if (/supply chain|inventory|warehouse|manufacturing|maintenance|asset management/.test(text)) return "Operations";
+    return "Process owner";
+  }
+
+  function coverageEvidence(item, fit) {
+    if (fit.key === "integration") return "Payload, response, message ID";
+    if (fit.key === "extensibility") return "Activation and output reconcile";
+    if (fit.key === "role") return "Tile, role, catalog, launch";
+    if (fit.key === "sapAutomate") return "Script step result and screenshot";
+    return "Before/after result and sign-off";
+  }
+
+  function coverageFitSummary(rows) {
+    return rows.reduce((acc, row) => {
+      acc[row.fit.key] = (acc[row.fit.key] || 0) + 1;
+      return acc;
+    }, {});
+  }
+
+  function coverageOwnerSummary(rows) {
+    const byOwner = new Map();
+    rows.filter((row) => row.timing === "release").forEach((row) => {
+      const current = byOwner.get(row.owner) || { owner: row.owner, count: 0, notStarted: 0, blocked: 0 };
+      current.count += 1;
+      if (row.status === "Not started") current.notStarted += 1;
+      if (row.status === "Blocked") current.blocked += 1;
+      byOwner.set(row.owner, current);
+    });
+    return [...byOwner.values()].sort((a, b) => b.count - a.count || a.owner.localeCompare(b.owner));
+  }
+
+  function coverageStatusSummary(rows) {
+    return rows.reduce((acc, row) => {
+      if (row.status === "Done") acc.done += 1;
+      else if (row.status === "In progress") acc.inProgress += 1;
+      else if (row.status === "Blocked") acc.blocked += 1;
+      else acc.notStarted += 1;
+      acc.total += 1;
+      return acc;
+    }, { total: 0, done: 0, inProgress: 0, blocked: 0, notStarted: 0 });
+  }
+
+  function coverageFitCards(summary) {
+    const cards = [
+      ["sapAutomate", "SAP automate candidate", "Check SAP automate / Process Navigator before writing manual steps.", "green"],
+      ["manual", "Manual targeted", "Small business walkthrough only for the changed behavior.", "warning"],
+      ["role", "Role/catalog check", "Validate successor app, catalog, space/page, and real business role.", "warning"],
+      ["integration", "Integration/API check", "Run a realistic payload or interface scenario after upgrade.", "teal"],
+      ["extensibility", "Extensibility check", "Activate/reconcile custom CDS, logic, BTP, or side-by-side usage.", "teal"]
+    ];
+    return cards.map(([key, label, text, tone]) => `
+      <article class="${escapeHtml(tone)}">
+        <strong>${escapeHtml(summary[key] || 0)}</strong>
+        <span>${escapeHtml(label)}</span>
+        <p>${escapeHtml(text)}</p>
+      </article>
+    `).join("");
+  }
+
+  function coverageStatusDashboard(status) {
+    const rows = [
+      ["Done", status.done, "green"],
+      ["In progress", status.inProgress, "warning"],
+      ["Blocked", status.blocked, "danger"],
+      ["Not started", status.notStarted, "neutral"]
+    ];
+    return `
+      <div class="status-bars">
+        ${rows.map(([label, value, tone]) => {
+          const width = status.total ? Math.max(4, Math.round((value / status.total) * 100)) : 0;
+          return `
+            <div class="status-bar-row ${tone}">
+              <span>${escapeHtml(label)}</span>
+              <div><i style="width:${width}%"></i></div>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function coverageTableRow(row) {
+    const item = row.item;
+    return `
+      <tr>
+        <td>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span class="row-meta">${escapeHtml(item.scope || "General")}</span>
+        </td>
+        <td>${escapeHtml(row.owner)}</td>
+        <td>${badge(row.fit.label, row.fit.tone)}<span class="row-meta">${escapeHtml(row.fit.detail)}</span></td>
+        <td>${escapeHtml(shorten(row.recommendation.reason, 120))}</td>
+        <td>${escapeHtml(row.evidence)}</td>
+        <td>
+          <select data-test-status="${escapeHtml(item.id)}" aria-label="Status for ${escapeHtml(item.title)}">
+            ${["Not started", "In progress", "Blocked", "Done"].map((status) => `<option ${row.status === status ? "selected" : ""}>${status}</option>`).join("")}
+          </select>
+        </td>
+      </tr>
+    `;
+  }
+
+  function exportCoverageOwners() {
+    const allRows = coverageRows();
+    const rows = [["Owner", "Test Count", "Not Started", "Blocked", "Sample Tests"]];
+    coverageOwnerSummary(allRows).forEach((owner) => {
+      const samples = allRows
+        .filter((row) => row.timing === "release" && row.owner === owner.owner)
+        .slice(0, 5)
+        .map((row) => row.item.title)
+        .join("; ");
+      rows.push([owner.owner, owner.count, owner.notStarted, owner.blocked, samples]);
+    });
+    downloadCsv(`rasd-${state.data.meta.release || "release"}-coverage-owner-list.csv`, rows);
+    showToast("Coverage owner list downloaded");
+  }
+
   function renderTestPlan() {
     const tests = sortByReview(applyGlobalFilters(state.data.derived.tests, false));
     const included = tests.filter((item) => testRecommendation(item).level !== "skip");
@@ -5095,6 +5409,7 @@
       return;
     }
     if (event.target.id === "downloadTests") exportTests();
+    if (event.target.id === "downloadCoverageOwners") exportCoverageOwners();
     if (event.target.id === "downloadCloudAlm") exportCloudAlmStaging();
     if (event.target.id === "downloadFutureBacklog") exportFutureBacklog();
     if (event.target.id === "downloadPublicSector") exportPublicSectorHighlights();
@@ -5121,6 +5436,7 @@
       const id = status.dataset.testStatus;
       state.testState[id] = { ...(state.testState[id] || {}), status: status.value };
       saveTestState();
+      if (state.page === "coverage") renderWithScrollRestore();
     }
     const owner = event.target.closest("[data-test-owner]");
     if (owner) {
