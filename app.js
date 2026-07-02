@@ -65,6 +65,7 @@
   const searchInput = document.querySelector("#globalSearch");
   const priorityFilter = document.querySelector("#priorityFilter");
   const zipInput = document.querySelector("#zipInput");
+  const stateInput = document.querySelector("#stateInput");
 
   function normalizeData(input) {
     const data = {
@@ -1829,17 +1830,8 @@
 
   function scopeCompletionSummary(rows, data = state.data) {
     return rows.reduce((acc, row) => {
-      const id = get(row, "Scope Item ID");
-      const progress = reviewProgress(scopeSpecificChanges(id, data));
-      if (!progress.total) {
-        acc.noChange += 1;
-        acc.total += 1;
-        return acc;
-      }
-      const status = scopeProgressStatus(progress).label;
-      if (status === "Complete") acc.completed += 1;
-      else if (status === "In progress") acc.inProgress += 1;
-      else acc.notStarted += 1;
+      if (!scopeHasDirectChanges(row, data)) acc.noChange += 1;
+      acc.completed += 1;
       acc.total += 1;
       return acc;
     }, { total: 0, completed: 0, inProgress: 0, notStarted: 0, noChange: 0 });
@@ -4757,6 +4749,10 @@
   function downloadCsv(filename, rows) {
     const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    downloadBlob(filename, blob);
+  }
+
+  function downloadBlob(filename, blob) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -4765,6 +4761,10 @@
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  function downloadJson(filename, payload) {
+    downloadBlob(filename, new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" }));
   }
 
   const CLOUD_ALM_HEADERS = [
@@ -5161,6 +5161,40 @@
     showToast("Public sector highlights exported");
   }
 
+  function exportProgressState() {
+    const payload = {
+      schema: "rasd-workbench-progress",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      release: state.data.meta.release || customerProfile.release,
+      customer: document.querySelector("#customerName")?.textContent?.trim() || "Customer",
+      sourceUrl: window.location.href,
+      reviewState: state.reviewState,
+      testState: state.testState
+    };
+    downloadJson(`rasd-${payload.release || "release"}-review-progress.json`, payload);
+    showToast("Review progress exported");
+  }
+
+  async function importProgressState(file) {
+    const payload = JSON.parse(await file.text());
+    const reviewState = payload.reviewState || payload["rasd-review-state"] || {};
+    const testState = payload.testState || payload["rasd-test-state"] || {};
+    if (!reviewState || typeof reviewState !== "object" || Array.isArray(reviewState)) {
+      throw new Error("Review state missing");
+    }
+    if (!testState || typeof testState !== "object" || Array.isArray(testState)) {
+      throw new Error("Test state missing");
+    }
+    state.reviewState = mergeReviewStates(state.reviewState, reviewState);
+    state.testState = { ...state.testState, ...testState };
+    saveReviewState();
+    saveTestState();
+    migrateReviewState();
+    render();
+    showToast("Review progress imported");
+  }
+
   function loadTestState() {
     try {
       return JSON.parse(localStorage.getItem("rasd-test-state") || "{}");
@@ -5413,6 +5447,8 @@
     if (event.target.id === "downloadCloudAlm") exportCloudAlmStaging();
     if (event.target.id === "downloadFutureBacklog") exportFutureBacklog();
     if (event.target.id === "downloadPublicSector") exportPublicSectorHighlights();
+    if (event.target.id === "exportProgress") exportProgressState();
+    if (event.target.id === "importProgress") stateInput?.click();
     if (event.target.id === "resetTests") {
       state.testState = {};
       saveTestState();
@@ -5504,6 +5540,19 @@
       console.error(error);
       document.querySelector("#importNote").textContent = "Import failed. Using preloaded data.";
       showToast("Import failed. Check the ZIP structure.");
+    }
+  });
+
+  stateInput.addEventListener("change", async () => {
+    const file = stateInput.files?.[0];
+    if (!file) return;
+    try {
+      await importProgressState(file);
+    } catch (error) {
+      console.error(error);
+      showToast("Progress import failed");
+    } finally {
+      stateInput.value = "";
     }
   });
 
