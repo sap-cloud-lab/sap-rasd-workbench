@@ -93,6 +93,12 @@
     Object.keys(data).forEach((key) => {
       if (Array.isArray(data[key])) data[key] = data[key].map(cleanRow).filter(hasUsefulValues);
     });
+    data.usedScopeImpact = mergeDuplicateScopeRows(data.usedScopeImpact);
+    data.activatedScopeImpact = mergeDuplicateScopeRows(data.activatedScopeImpact);
+    data.completeScopeImpact = mergeDuplicateScopeRows(data.completeScopeImpact);
+    data.usedPersonalizedWhatsNew = mergeDuplicateChangeRows(data.usedPersonalizedWhatsNew);
+    data.activatedPersonalizedWhatsNew = mergeDuplicateChangeRows(data.activatedPersonalizedWhatsNew);
+    data.completeWhatsNew = mergeDuplicateChangeRows(data.completeWhatsNew);
     data.derived = deriveData(data);
     return data;
   }
@@ -256,6 +262,64 @@
       seen.add(key);
       return true;
     });
+  }
+
+  function normalizedDuplicateText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function changeDuplicateKey(row) {
+    const title = normalizedDuplicateText(getTitle(row));
+    const description = normalizedDuplicateText(get(row, "Description(Description)", "Description", "Additional Information", "Technical Name", "Deprecated Object"));
+    const scopes = getScopeItems(row).map((item) => item.toUpperCase()).sort().join(",");
+    const parts = [getAction(row), getType(row), getCategory(row), title, description, scopes].map(normalizedDuplicateText);
+    return parts.join("|");
+  }
+
+  function mergeDuplicateChangeRows(rows) {
+    const merged = new Map();
+    (rows || []).forEach((row) => {
+      const key = changeDuplicateKey(row) || rowKey(row);
+      if (!key) return;
+      const existing = merged.get(key);
+      if (!existing) {
+        merged.set(key, { ...row, groupedRows: [row] });
+        return;
+      }
+      existing.groupedRows.push(row);
+      Object.keys(row).forEach((field) => {
+        if (!existing[field] && row[field]) existing[field] = row[field];
+      });
+    });
+    return [...merged.values()];
+  }
+
+  function mergeDuplicateScopeRows(rows) {
+    const merged = new Map();
+    (rows || []).forEach((row) => {
+      const id = get(row, "Scope Item ID");
+      if (!id) return;
+      const key = id.toUpperCase();
+      const existing = merged.get(key);
+      if (!existing) {
+        merged.set(key, { ...row, groupedRows: [row] });
+        return;
+      }
+      existing.groupedRows.push(row);
+      const currentDegree = Number(get(existing, "Degree of Change") || 0);
+      const nextDegree = Number(get(row, "Degree of Change") || 0);
+      if (nextDegree > currentDegree) existing["Degree of Change"] = get(row, "Degree of Change");
+      const lobs = uniqueList([
+        ...splitIds(get(existing, "Line of Business")),
+        ...splitIds(get(row, "Line of Business"))
+      ]);
+      existing["Line of Business"] = lobs.join(", ");
+      if (/changed/i.test(get(row, "Release Status"))) existing["Release Status"] = get(row, "Release Status");
+      Object.keys(row).forEach((field) => {
+        if (!existing[field] && row[field]) existing[field] = row[field];
+      });
+    });
+    return [...merged.values()];
   }
 
   function getAction(row) {
@@ -863,6 +927,18 @@
     return get(row, "sourceUrl", "What's New Document(What's New Document)", "What\u0027s New Document(What\u0027s New Document)", "What's New Document Title Url", "What\u0027s New Document Title Url", "Link(Link)");
   }
 
+  function whatsNewSourceReferences(row, primaryLabel = "SAP What's New item") {
+    const grouped = row?.groupedRows?.length ? row.groupedRows : [row];
+    return dedupeReferences(grouped.map((item, index) => {
+      const url = whatsNewLink(item);
+      if (!url) return null;
+      return {
+        label: index === 0 ? primaryLabel : `${primaryLabel} source ${index + 1}`,
+        url
+      };
+    }));
+  }
+
   function dedupeReferences(references) {
     const seen = new Set();
     return (references || []).filter((reference) => {
@@ -1178,11 +1254,10 @@
     if (harvested) return harvested;
 
     const title = getTitle(row).toLowerCase();
-    const source = whatsNewLink(row);
     const withSource = (guidance) => ({
       ...guidance,
       references: dedupeReferences([
-        ...(source ? [{ label: "SAP What's New item", url: source }] : []),
+        ...whatsNewSourceReferences(row),
         ...(guidance.references || [])
       ])
     });
@@ -1432,7 +1507,7 @@
       screenshots: article.screenshots || [],
       media: article.media || [],
       references: dedupeReferences([
-        ...(source ? [{ label: `SAP What's New - ${getTitle(row)}`, url: source }] : []),
+        ...whatsNewSourceReferences(row, `SAP What's New - ${getTitle(row)}`),
         ...((article.references || []).map((reference) => typeof reference === "string" ? { label: "SAP reference", url: reference } : reference))
       ])
     };
@@ -1719,7 +1794,13 @@
 
   function completionSummaryText(summary) {
     if (!summary || !summary.total) return "";
-    return `${summary.completed} completed, ${summary.inProgress} in progress, ${summary.notStarted} not started`;
+    const parts = [
+      `${summary.completed} completed`,
+      `${summary.inProgress} in progress`,
+      `${summary.notStarted} not started`
+    ];
+    if (summary.noChange) parts.push(`${summary.noChange} no direct changes`);
+    return parts.join(", ");
   }
 
   function completionSummary(page, rows, data = state.data) {
@@ -1749,13 +1830,18 @@
     return rows.reduce((acc, row) => {
       const id = get(row, "Scope Item ID");
       const progress = reviewProgress(scopeSpecificChanges(id, data));
+      if (!progress.total) {
+        acc.noChange += 1;
+        acc.total += 1;
+        return acc;
+      }
       const status = scopeProgressStatus(progress).label;
       if (status === "Complete") acc.completed += 1;
       else if (status === "In progress") acc.inProgress += 1;
       else acc.notStarted += 1;
       acc.total += 1;
       return acc;
-    }, { total: 0, completed: 0, inProgress: 0, notStarted: 0 });
+    }, { total: 0, completed: 0, inProgress: 0, notStarted: 0, noChange: 0 });
   }
 
   function completionSummaryMarkup(summary, compact = false) {
@@ -1766,6 +1852,7 @@
           <span class="complete"><strong>${escapeHtml(summary.completed)}</strong> completed</span>
           <span class="progress"><strong>${escapeHtml(summary.inProgress)}</strong> in progress</span>
           <span class="todo"><strong>${escapeHtml(summary.notStarted)}</strong> not started</span>
+          ${summary.noChange ? `<span class="todo"><strong>${escapeHtml(summary.noChange)}</strong> no direct changes</span>` : ""}
         </span>
       `;
     }
@@ -1774,6 +1861,7 @@
         <span class="complete"><strong>${escapeHtml(summary.completed)}</strong> completed</span>
         <span class="progress"><strong>${escapeHtml(summary.inProgress)}</strong> in progress</span>
         <span class="todo"><strong>${escapeHtml(summary.notStarted)}</strong> not started</span>
+        ${summary.noChange ? `<span class="todo"><strong>${escapeHtml(summary.noChange)}</strong> no direct changes</span>` : ""}
       </span>
     `;
   }
@@ -1822,6 +1910,7 @@
       publicsector: data.derived.publicSectorHighlights,
       testplan: data.derived.tests
     };
+    if (page === "scope") return scopeRowsWithDirectChanges(data.usedScopeImpact, data);
     return rowSets[page] || [];
   }
 
@@ -2003,7 +2092,7 @@
       return [page, title, sub, rows.length, icon, tone, reviewProgress(rows), completionSummary(page, rows, data), homeCardBreakdown(page, rows)];
     };
     const streams = [
-      item("scope", "Review scope items", "Which used scope items changed", "1", "blue"),
+      item("scope", "Review scope items", "Used scope items with direct change detail", "1", "blue"),
       item("whatsnew", "Review changes", "Action list and next steps", "2", "warning"),
       item("apps", "Review apps", "Roles, catalogs, spaces and pages", "3", "danger"),
       item("extensibility", "Review extensibility", "APIs, CDS and custom usage", "4", "teal"),
@@ -2122,7 +2211,8 @@
     const filtered = [...applyGlobalFilters(rows, false)].sort((a, b) => Number(get(b, "Degree of Change") || 0) - Number(get(a, "Degree of Change") || 0));
     pageContent.innerHTML = `
       <div class="filter-row">
-        ${filterButton("scopeMode", "used", "Used only", mode)}
+        ${filterButton("scopeMode", "used", "Used with changes", mode)}
+        ${filterButton("scopeMode", "usedNoDetail", "Used - no direct detail", mode)}
         ${filterButton("scopeMode", "activated", "Activated only", mode)}
         ${filterButton("scopeMode", "all", "All impacted", mode)}
         ${scopeCompletionPills(filtered)}
@@ -2136,9 +2226,22 @@
   }
 
   function scopeRowsForMode(mode) {
+    if (mode === "usedNoDetail") return scopeRowsWithoutDirectChanges(state.data.usedScopeImpact, state.data);
     if (mode === "activated") return state.data.derived.activatedOnly;
     if (mode === "all") return state.data.completeScopeImpact;
-    return state.data.usedScopeImpact;
+    return scopeRowsWithDirectChanges(state.data.usedScopeImpact, state.data);
+  }
+
+  function scopeHasDirectChanges(row, data = state.data) {
+    return scopeSpecificChanges(get(row, "Scope Item ID"), data).length > 0;
+  }
+
+  function scopeRowsWithDirectChanges(rows, data = state.data) {
+    return rows.filter((row) => scopeHasDirectChanges(row, data));
+  }
+
+  function scopeRowsWithoutDirectChanges(rows, data = state.data) {
+    return rows.filter((row) => !scopeHasDirectChanges(row, data));
   }
 
   function filterButton(key, value, label, active) {
@@ -2153,6 +2256,7 @@
         <span class="complete">${summary.completed} completed</span>
         <span class="progress">${summary.inProgress} in progress</span>
         <span class="todo">${summary.notStarted} not started</span>
+        ${summary.noChange ? `<span class="todo">${summary.noChange} no direct changes</span>` : ""}
       </div>
     `;
   }
