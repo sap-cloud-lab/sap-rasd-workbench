@@ -1950,7 +1950,7 @@
     if (publicCloudLoaded()) return Promise.resolve(true);
     if (publicCloudLoadFailed) return Promise.resolve(false);
     if (!publicCloudLoadPromise) {
-      publicCloudLoadPromise = loadScript("public-cloud-data.js")
+      publicCloudLoadPromise = loadScript("public-cloud-data.js?v=20260703-pruned-targets")
         .then(() => {
           state.data.publicCloud = normalizePublicCloudData(window.RASD_PUBLIC_CLOUD_DATA || {});
           cloudEvidenceCache = new WeakMap();
