@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clean Core Advisor</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Saved SAP questions">
+        <a class="brand" href="#" id="homeLink" aria-label="Clean Core Advisor home">
+          <span class="sap-mark">SAP</span>
+          <span class="brand-copy">
+            <strong>Clean Core Advisor</strong>
+            <small>Public Cloud CDS/API Finder</small>
+          </span>
+        </a>
+
+        <button class="new-chat" id="newPrompt" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
+          New prompt
+        </button>
+
+        <section class="sidebar-section grow">
+          <div class="section-row">
+            <h2>Saved questions</h2>
+            <button class="text-button" id="clearHistory" type="button">Clear</button>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </section>
+
+        <section class="sidebar-section">
+          <h2>Examples</h2>
+          <div class="example-list" id="exampleList"></div>
+        </section>
+
+        <section class="sidebar-section source-section">
+          <h2>Official surfaces</h2>
+          <a href="https://api.sap.com/products/SAPS4HANACloud/apis/all" target="_blank" rel="noreferrer">SAP Business Accelerator Hub</a>
+          <span>View Browser: verify in tenant</span>
+          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD" target="_blank" rel="noreferrer">SAP Help Portal</a>
+        </section>
+      </aside>
+
+      <main class="main-stage is-home" id="mainStage">
+        <header class="utility-bar">
+          <span class="hub-status" id="hubStatus">Ready</span>
+          <a class="utility-link" href="https://userapps.support.sap.com/sap/support/knowledge/en/2974010" target="_blank" rel="noreferrer">KBA 2974010</a>
+          <button class="icon-button" id="copyAnswer" type="button" title="Copy answer" aria-label="Copy answer" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h10v13H8z" /><path d="M6 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1" /></svg>
+          </button>
+          <button class="utility-primary" id="exportAnswer" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
+            Export
+          </button>
+        </header>
+
+        <section class="landing-view" id="landingView" aria-label="Start a clean-core prompt">
+          <div class="landing-copy">
+            <h1>What SAP requirement are you working on?</h1>
+          </div>
+        </section>
+
+        <section class="result-view" id="resultView" aria-live="polite" hidden>
+          <article class="chat-message user-message">
+            <div class="avatar">AC</div>
+            <div class="bubble" id="userBubble"></div>
+          </article>
+
+          <article class="answer-block">
+            <div class="assistant-row">
+              <div class="avatar assistant-avatar">AI</div>
+              <div>
+                <p class="eyebrow" id="answerModeLabel">Recommendation</p>
+                <h1 id="recommendationTitle">Analysing...</h1>
+                <p id="recommendationSummary"></p>
+              </div>
+              <div class="score-ring" id="scoreRing">
+                <strong id="scoreValue">0</strong>
+                <span>Clean Core</span>
+              </div>
+            </div>
+
+            <div class="route-strip" id="routeGrid"></div>
+          </article>
+
+          <nav class="result-tabs" id="resultTabs" aria-label="Result sections">
+            <button class="active" type="button" data-tab="decisionPanel">Decision</button>
+            <button type="button" data-tab="implementationPanel">Implementation</button>
+            <button type="button" data-tab="cdsPanel">CDS/API views</button>
+          </nav>
+
+          <section class="result-panel active" id="decisionPanel">
+            <section class="answer-grid">
+              <article class="result-card">
+                <p class="eyebrow">Why this recommendation</p>
+                <ul id="rationaleList"></ul>
+              </article>
+              <article class="result-card">
+                <p class="eyebrow">Recommended next move</p>
+                <ul id="stepsList"></ul>
+              </article>
+            </section>
+
+            <section class="result-card">
+              <div class="card-heading">
+                <div>
+                  <p class="eyebrow">Options compared</p>
+                  <h2>Where this could be done</h2>
+                </div>
+              </div>
+              <div class="option-grid" id="optionGrid"></div>
+            </section>
+          </section>
+
+          <section class="result-panel" id="implementationPanel">
+            <section class="result-card">
+              <div class="card-heading">
+                <div>
+                  <p class="eyebrow">Implementation guide</p>
+                  <h2>How to implement the recommended route</h2>
+                </div>
+              </div>
+              <div class="implementation-flow" id="implementationFlow"></div>
+            </section>
+
+            <section class="answer-grid">
+              <article class="result-card">
+                <p class="eyebrow">In-app / developer path</p>
+                <div class="checklist" id="developerChecklist"></div>
+              </article>
+              <article class="result-card">
+                <p class="eyebrow">Side-by-side path</p>
+                <div class="field-stack" id="btpFields"></div>
+              </article>
+            </section>
+
+            <section class="result-card compact-card">
+              <p class="eyebrow">Clean-core guardrails</p>
+              <div class="guardrail-list" id="guardrailList"></div>
+            </section>
+          </section>
+
+          <section class="result-panel" id="cdsPanel">
+            <section class="result-card">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow" id="cdsPanelEyebrow">CDS/API finder</p>
+                <h2 id="cdsPanelTitle">Relevant released objects and gaps</h2>
+              </div>
+              <label class="inline-select">
+                <span>Group</span>
+                <select id="groupBy">
+                  <option value="need">Need</option>
+                  <option value="type">Type</option>
+                  <option value="route">Route</option>
+                </select>
+              </label>
+            </div>
+            <div class="candidate-list" id="candidateList"></div>
+            </section>
+          </section>
+        </section>
+
+        <form class="prompt-box" id="promptForm">
+          <button class="composer-tool" type="button" id="savePrompt" title="Save question" aria-label="Save question">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><path d="M17 21v-8H7v8" /><path d="M7 3v5h8" /></svg>
+          </button>
+          <textarea id="promptInput" rows="1" maxlength="1200" placeholder="Ask about AR ageing, cost centre actuals, a custom field, or an external integration"></textarea>
+          <button class="send-button" id="askButton" type="submit" title="Ask" aria-label="Ask">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13" /><path d="m22 2-7 20-4-9-9-4z" /></svg>
+          </button>
+        </form>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="seed-data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
