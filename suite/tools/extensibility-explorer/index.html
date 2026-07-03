@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAP Extensibility Concepts</title>
+  <style>
+    :root {
+      --sap-blue: #0a6ed1;
+      --sap-blue-2: #1a90ff;
+      --sap-cyan: #00a3e0;
+      --sap-teal: #047a75;
+      --sap-green: #22a06b;
+      --ink: #223548;
+      --muted: #5b6b7b;
+      --line: #d8e3ee;
+      --paper: #f6f8fb;
+      --surface: #ffffff;
+      --blue-soft: #eaf5ff;
+      --cyan-soft: #e6f7ff;
+      --teal-soft: #e7f8f3;
+      --green-soft: #edf8ed;
+      --shadow: 0 18px 42px rgba(34, 53, 72, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "72", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(120deg, rgba(10, 110, 209, .08), transparent 36%),
+        linear-gradient(300deg, rgba(4, 122, 117, .08), transparent 30%),
+        #eef3f8;
+    }
+
+    .page-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 28px;
+      background: rgba(255, 255, 255, .88);
+      border-bottom: 1px solid rgba(216, 227, 238, .9);
+      backdrop-filter: blur(12px);
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .page-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .nav a {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--sap-blue);
+      background: white;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    main {
+      display: grid;
+      gap: 34px;
+      padding: 34px 28px 46px;
+    }
+
+    .concept {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .concept-label {
+      width: min(1280px, 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .slide {
+      position: relative;
+      width: min(1280px, 100%);
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid rgba(216, 227, 238, .9);
+      box-shadow: var(--shadow);
+    }
+
+    .slide h2, .slide h3, .slide p { margin: 0; }
+
+    .slide-title {
+      position: absolute;
+      left: 44px;
+      top: 30px;
+      font-size: 29px;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: var(--ink);
+    }
+
+    .slide-kicker {
+      position: absolute;
+      left: 46px;
+      top: 72px;
+      max-width: 640px;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .top-rule {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 112px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .brand-rail {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 10px;
+      background: linear-gradient(#0a6ed1, #00a3e0);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 0 14px;
+      border: 1px solid #b9ddf8;
+      border-radius: 6px;
+      color: var(--sap-blue);
+      background: var(--blue-soft);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .small-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .fine {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #f2f6fa;
+      border: 1px solid #dce6f1;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .card {
+      border: 1px solid #d7e1ea;
+      border-radius: 9px;
+      background: white;
+      box-shadow: 0 12px 26px rgba(34, 53, 72, .08);
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .section-title {
+      margin-bottom: 7px;
+      color: var(--sap-blue);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .teal .section-title { color: var(--sap-teal); }
+
+    /* Concept 1 */
+    .v1 {
+      background:
+        radial-gradient(circle at 95% 12%, rgba(0, 163, 224, .14), transparent 28%),
+        linear-gradient(180deg, #fbfdff 0%, #f4f8fc 100%);
+    }
+
+    .v1 .choice-bar {
+      position: absolute;
+      left: 58px;
+      right: 58px;
+      top: 126px;
+      height: 54px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border: 1px solid #cdddeb;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .92);
+      box-shadow: 0 10px 24px rgba(34, 53, 72, .07);
+    }
+
+    .v1 .choice-step {
+      position: relative;
+      display: grid;
+      align-content: center;
+      gap: 2px;
+      padding: 0 22px;
+      border-right: 1px solid #dce7f1;
+      color: #2f4052;
+    }
+
+    .v1 .choice-step:last-child { border-right: 0; }
+
+    .v1 .choice-step::after {
+      content: "";
+      position: absolute;
+      right: -9px;
+      top: 18px;
+      width: 17px;
+      height: 17px;
+      transform: rotate(45deg);
+      background: rgba(255, 255, 255, .96);
+      border-top: 1px solid #dce7f1;
+      border-right: 1px solid #dce7f1;
+      z-index: 2;
+    }
+
+    .v1 .choice-step:last-child::after { display: none; }
+
+    .v1 .choice-step strong {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .v1 .choice-step span {
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .v1 .decision-cards {
+      position: absolute;
+      left: 58px;
+      right: 58px;
+      top: 206px;
+      bottom: 50px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .v1 .option-card {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 86px 1fr 42px;
+      border: 1px solid #d6e3ef;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 18px 34px rgba(34, 53, 72, .10);
+    }
+
+    .v1 .option-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 5px;
+      background: var(--accent);
+    }
+
+    .v1 .option-head {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 20px 12px;
+      color: var(--head);
+      background: var(--head-bg);
+    }
+
+    .v1 .option-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: white;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(34, 53, 72, .10);
+    }
+
+    .v1 .option-title {
+      display: grid;
+      gap: 2px;
+      font-size: 18px;
+      line-height: 1.05;
+      font-weight: 700;
+    }
+
+    .v1 .option-title span {
+      color: inherit;
+      opacity: .78;
+      font-size: 10.5px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .v1 .option-body {
+      padding: 18px 20px 12px;
+      display: grid;
+      grid-template-rows: 58px repeat(3, minmax(42px, 1fr));
+      gap: 6px;
+      align-content: stretch;
+    }
+
+    .v1 .when-box {
+      padding: 10px 12px;
+      border-radius: 7px;
+      background: #f4f8fc;
+      border: 1px solid #dce7f1;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .v1 .field {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding-top: 11px;
+      border-top: 1px solid #e6edf4;
+      font-size: 12.5px;
+      line-height: 1.28;
+    }
+
+    .v1 .field b {
+      color: var(--muted);
+      font-size: 10.5px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .v1 .runtime {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      border-top: 1px solid #dce7f1;
+      background: #f7fafc;
+      color: #31465a;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .v1 .key-user {
+      --accent: #0a6ed1;
+      --head: #073b6f;
+      --head-bg: #eaf5ff;
+    }
+
+    .v1 .developer-ext {
+      --accent: #1a90ff;
+      --head: white;
+      --head-bg: linear-gradient(135deg, #0a6ed1, #1a90ff);
+    }
+
+    .v1 .side-by-side {
+      --accent: #047a75;
+      --head: #064b48;
+      --head-bg: #e7f8f3;
+    }
+
+    /* Concept 2 */
+    .v2 .map {
+      position: absolute;
+      left: 58px;
+      right: 58px;
+      top: 132px;
+      bottom: 56px;
+      display: grid;
+      grid-template-columns: 1.2fr .08fr .9fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .v2 .core,
+    .v2 .btp {
+      position: relative;
+      border-radius: 18px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      box-shadow: 0 16px 36px rgba(34, 53, 72, .08);
+    }
+
+    .v2 .core::before,
+    .v2 .btp::before {
+      content: "";
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 26px;
+      height: 58px;
+      border-radius: 8px;
+      background: #ddeeff;
+      border: 1px solid #9bcff5;
+    }
+
+    .v2 .btp::before {
+      background: #ddf7ef;
+      border-color: #8cd9c9;
+    }
+
+    .v2 .block-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .v2 .block {
+      min-height: 218px;
+      padding: 20px;
+      border-radius: 12px;
+      background: var(--blue-soft);
+      border: 1px solid #b9ddf8;
+    }
+
+    .v2 .block.deep {
+      background: #0a6ed1;
+      color: white;
+      border-color: #0854a0;
+    }
+
+    .v2 .block.teal {
+      background: var(--teal-soft);
+      color: var(--ink);
+      border-color: #8cd9c9;
+      min-height: 258px;
+    }
+
+    .v2 .bridge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .v2 .bridge-line {
+      width: 1px;
+      flex: 1;
+      background: #ccd8e5;
+    }
+
+    .v2 .foundation-label {
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      bottom: 44px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0854a0;
+    }
+
+    .v2 .btp .foundation-label { color: var(--sap-teal); }
+
+    /* Concept 3 */
+    .v3 .flow {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      top: 138px;
+      bottom: 74px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .v3 .step {
+      position: relative;
+      padding: 28px 24px;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .v3 .step::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -29px;
+      width: 30px;
+      height: 2px;
+      background: #a9bacb;
+    }
+
+    .v3 .step:last-child::after { display: none; }
+
+    .v3 .answer {
+      margin: 18px 0 20px;
+      min-height: 78px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 18px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .v3 .route {
+      margin-top: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    /* Concept 4 */
+    .v4 .plot {
+      position: absolute;
+      left: 86px;
+      right: 84px;
+      top: 142px;
+      bottom: 84px;
+      border-left: 2px solid #8aa0b5;
+      border-bottom: 2px solid #8aa0b5;
+    }
+
+    .v4 .axis-y,
+    .v4 .axis-x {
+      position: absolute;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .v4 .axis-y { left: 36px; top: 218px; transform: rotate(-90deg); transform-origin: left top; }
+    .v4 .axis-x { right: 76px; bottom: 42px; }
+
+    .v4 .bubble {
+      position: absolute;
+      border-radius: 50%;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      padding: 24px;
+      border: 1px solid;
+      box-shadow: var(--shadow);
+    }
+
+    .v4 .bubble h3 { font-size: 20px; margin-bottom: 6px; }
+    .v4 .bubble p { font-size: 12px; line-height: 1.25; }
+
+    .v4 .b1 { left: 52px; bottom: 52px; width: 220px; height: 220px; background: #eaf5ff; border-color: #9bcff5; color: #0854a0; }
+    .v4 .b2 { left: 372px; bottom: 118px; width: 240px; height: 240px; background: #0a6ed1; border-color: #0854a0; color: white; }
+    .v4 .b3 { right: 42px; bottom: 44px; width: 235px; height: 235px; background: #ddf7ef; border-color: #8cd9c9; color: var(--sap-teal); }
+
+    .v4 .legend {
+      position: absolute;
+      right: 72px;
+      top: 132px;
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Concept 5 */
+    .v5 {
+      background:
+        radial-gradient(circle at 8% 92%, rgba(34, 160, 107, .12), transparent 28%),
+        linear-gradient(180deg, #fbfdff 0%, #f4f8fb 100%);
+    }
+
+    .v5 .lanes {
+      position: absolute;
+      left: 62px;
+      right: 62px;
+      top: 140px;
+      bottom: 62px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .v5 .lane {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: 86px 1fr 50px;
+    }
+
+    .v5 .lane::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 5px;
+      background: var(--accent);
+    }
+
+    .v5 .lane-head {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px 12px;
+      color: var(--head);
+      background: var(--head-bg);
+    }
+
+    .v5 .head-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: white;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(34, 53, 72, .10);
+    }
+
+    .v5 .head-copy {
+      display: grid;
+      gap: 2px;
+    }
+
+    .v5 .head-action {
+      display: block;
+      color: inherit;
+      opacity: .78;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .v5 .head-title {
+      color: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.05;
+    }
+
+    .v5 .key-user {
+      --accent: #0a6ed1;
+      --head: #073b6f;
+      --head-bg: #eaf5ff;
+    }
+
+    .v5 .developer-ext {
+      --accent: #1a90ff;
+      --head: white;
+      --head-bg: linear-gradient(135deg, #0a6ed1, #1a90ff);
+    }
+
+    .v5 .side-by-side {
+      --accent: #047a75;
+      --head: #064b48;
+      --head-bg: #e7f8f3;
+    }
+
+    .v5 .lane-body {
+      padding: 16px 22px;
+      display: grid;
+      gap: 0;
+      align-content: start;
+    }
+
+    .v5 .lane-row {
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 12px;
+      align-items: start;
+      min-height: 62px;
+      padding: 12px 0;
+      border-bottom: 1px solid #e6edf4;
+      font-size: 12.5px;
+      line-height: 1.25;
+    }
+
+    .v5 .lane-row:first-child { padding-top: 0; }
+    .v5 .lane-row:last-child { border-bottom: 0; }
+
+    .v5 .lane-row .small-label {
+      color: inherit;
+      opacity: .72;
+      padding-top: 1px;
+    }
+
+    .v5 .lane-row strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #223548;
+      font-size: 13px;
+      line-height: 1.12;
+    }
+
+    .v5 .lane-foot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      text-align: center;
+      font-weight: 700;
+      border-top: 1px solid var(--line);
+      background: #f5f8fb;
+      color: var(--muted);
+    }
+
+    /* Concept 6 */
+    .v6 .hub {
+      position: absolute;
+      left: 72px;
+      right: 72px;
+      top: 132px;
+      bottom: 58px;
+      display: grid;
+      grid-template-columns: 1fr 250px 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .v6 .center {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+      height: 250px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background: #0a6ed1;
+      color: white;
+      box-shadow: var(--shadow);
+      padding: 30px;
+    }
+
+    .v6 .hub-card {
+      padding: 20px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .v6 .hub-card h3 {
+      font-size: 17px;
+    }
+
+    .v6 .hub-card p {
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .v6 .connector {
+      position: absolute;
+      height: 1px;
+      background: #bfd0df;
+    }
+
+    .v6 .l1 { left: 276px; top: 196px; width: 145px; transform: rotate(8deg); }
+    .v6 .l2 { left: 276px; bottom: 196px; width: 145px; transform: rotate(-8deg); }
+    .v6 .l3 { right: 276px; top: 196px; width: 145px; transform: rotate(-8deg); }
+    .v6 .l4 { right: 276px; bottom: 196px; width: 145px; transform: rotate(8deg); }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">SAP Extensibility Slide Concepts</h1>
+      <p class="page-subtitle">Six directions for the same content. Open this file in a browser and pick the direction worth refining.</p>
+    </div>
+    <nav class="nav" aria-label="Concept navigation">
+      <a href="#v1">Decision</a>
+      <a href="#v2">Architecture</a>
+      <a href="#v3">Decision Flow</a>
+      <a href="#v4">Spectrum</a>
+      <a href="#v5">Lanes</a>
+      <a href="#v6">Hub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="concept" id="v1">
+      <div class="concept-label"><span>Version 1</span><span>Decision cards</span></div>
+      <article class="slide v1">
+        <div class="brand-rail"></div>
+        <h2 class="slide-title">Choose the right extensibility path</h2>
+        <p class="slide-kicker">Start in-app when the change is small or close to released SAP objects. Move side-by-side when the app needs its own lifecycle.</p>
+        <div class="top-rule"></div>
+        <div class="choice-bar">
+          <div class="choice-step"><strong>1. Adapt</strong><span>Small business-led change</span></div>
+          <div class="choice-step"><strong>2. Extend</strong><span>ABAP logic close to SAP</span></div>
+          <div class="choice-step"><strong>3. Compose</strong><span>Independent app or service</span></div>
+        </div>
+        <div class="decision-cards">
+          <div class="option-card key-user">
+            <div class="option-head">
+              <div class="option-number">01</div>
+              <div class="option-title"><span>Adapt</span>Key User Extensibility</div>
+            </div>
+            <div class="option-body">
+              <div class="when-box">Use for field, UI, form, template, or analytics changes.</div>
+              <div class="field"><b>Build</b><span>No-code configuration and lightweight business logic.</span></div>
+              <div class="field"><b>Owner</b><span>Key User</span></div>
+              <div class="field"><b>Value</b><span>Fast, governed changes managed inside SAP S/4HANA Cloud.</span></div>
+            </div>
+            <div class="runtime">Runs in SAP S/4HANA Cloud</div>
+          </div>
+          <div class="option-card developer-ext">
+            <div class="option-head">
+              <div class="option-number">02</div>
+              <div class="option-title"><span>Extend</span>Developer Extensibility</div>
+            </div>
+            <div class="option-body">
+              <div class="when-box">Use when ABAP logic must stay close to released SAP objects.</div>
+              <div class="field"><b>Build</b><span>Released-object extensions, partner extensions, and custom apps.</span></div>
+              <div class="field"><b>Owner</b><span>ABAP Developer</span></div>
+              <div class="field"><b>Value</b><span>More control while keeping the extension in-app.</span></div>
+            </div>
+            <div class="runtime">Runs in SAP S/4HANA Cloud</div>
+          </div>
+          <div class="option-card side-by-side">
+            <div class="option-head">
+              <div class="option-number">03</div>
+              <div class="option-title"><span>Compose</span>Side-by-Side Extensibility</div>
+            </div>
+            <div class="option-body">
+              <div class="when-box">Use when the app needs an independent lifecycle.</div>
+              <div class="field"><b>Build</b><span>BTP apps using ABAP, Java, JavaScript, Python, etc.</span></div>
+              <div class="field"><b>Owner</b><span>Developer</span></div>
+              <div class="field"><b>Value</b><span>Decoupled from SAP S/4HANA Cloud upgrade cycles.</span></div>
+            </div>
+            <div class="runtime">Runs on SAP Business Technology Platform</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="concept" id="v2">
+      <div class="concept-label"><span>Version 2</span><span>Where the extension lives</span></div>
+      <article class="slide v2">
+        <div class="brand-rail"></div>
+        <h2 class="slide-title">Where the extension lives</h2>
+        <p class="slide-kicker">A spatial view: in-app changes remain inside SAP S/4HANA Cloud, while side-by-side apps run on BTP and integrate back through released interfaces.</p>
+        <div class="top-rule"></div>
+        <div class="map">
+          <div class="core">
+            <div class="tag">SAP S/4HANA Cloud</div>
+            <div class="block-grid">
+              <div class="block">
+                <div class="section-title">Key User</div>
+                <ul><li>Fields and UI layout</li><li>Forms and templates</li><li>CDS analytics</li></ul>
+              </div>
+              <div class="block deep">
+                <div class="section-title" style="color:#d9ecff;">ABAP Developer</div>
+                <ul><li>Released objects</li><li>Partner extensions</li><li>Custom apps</li></ul>
+              </div>
+            </div>
+            <div class="foundation-label">Public Edition foundation</div>
+          </div>
+          <div class="bridge"><div class="bridge-line"></div><span>APIs<br>Events<br>Services</span><div class="bridge-line"></div></div>
+          <div class="btp">
+            <div class="tag" style="color:var(--sap-teal); border-color:#8cd9c9; background:var(--teal-soft);">SAP BTP</div>
+            <div class="block teal" style="margin-top:22px;">
+              <div class="section-title">Side-by-side</div>
+              <ul><li>Industry cloud partner apps</li><li>ABAP or non-ABAP apps</li><li>Java, JavaScript, Python</li><li>Independent lifecycle</li></ul>
+            </div>
+            <div class="foundation-label">Business Technology Platform</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="concept" id="v3">
+      <div class="concept-label"><span>Version 3</span><span>Decision flow</span></div>
+      <article class="slide v3">
+        <div class="brand-rail"></div>
+        <h2 class="slide-title">Choose the lightest extension pattern</h2>
+        <p class="slide-kicker">Start with the smallest governed change. Move right only when the requirement needs more development control or a separate lifecycle.</p>
+        <div class="top-rule"></div>
+        <div class="flow">
+          <div class="step">
+            <span class="pill">1. UI, field, report, form?</span>
+            <div class="answer" style="background:var(--blue-soft); color:var(--sap-blue);">Use Key User Extensibility</div>
+            <div class="route"><span class="small-label">Role</span><p>Key User</p><span class="small-label">Environment</span><p>SAP S/4HANA Cloud</p></div>
+          </div>
+          <div class="step">
+            <span class="pill">2. Need released-object logic?</span>
+            <div class="answer" style="background:#0a6ed1; color:white;">Use Developer Extensibility</div>
+            <div class="route"><span class="small-label">Role</span><p>ABAP Developer</p><span class="small-label">Environment</span><p>SAP S/4HANA Cloud</p></div>
+          </div>
+          <div class="step teal">
+            <span class="pill">3. Need independent lifecycle?</span>
+            <div class="answer" style="background:var(--teal-soft); color:var(--sap-teal);">Use Side-by-Side Extensibility</div>
+            <div class="route"><span class="small-label">Role</span><p>Developer</p><span class="small-label">Environment</span><p>SAP Business Technology Platform</p></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="concept" id="v4">
+      <div class="concept-label"><span>Version 4</span><span>Complexity and coupling spectrum</span></div>
+      <article class="slide v4">
+        <div class="brand-rail"></div>
+        <h2 class="slide-title">Extension options by coupling and complexity</h2>
+        <p class="slide-kicker">The relationship is easier to scan as a map: higher control usually means more development effort or a more independent runtime.</p>
+        <div class="top-rule"></div>
+        <div class="axis-y">Development complexity</div>
+        <div class="axis-x">Runtime decoupling</div>
+        <div class="plot">
+          <div class="bubble b1"><h3>Key User</h3><p>Low/no-code changes for fields, UI, forms, templates, and analytics.</p></div>
+          <div class="bubble b2"><h3>ABAP Developer</h3><p>Released object extensions, partner extensions, and custom apps.</p></div>
+          <div class="bubble b3"><h3>Side-by-side</h3><p>BTP apps and services with an independent lifecycle.</p></div>
+        </div>
+        <div class="legend"><span class="pill">S/4HANA Cloud</span><span class="pill">BTP</span></div>
+      </article>
+    </section>
+
+    <section class="concept" id="v5">
+      <div class="concept-label"><span>Version 5</span><span>Ownership lanes</span></div>
+      <article class="slide v5">
+        <div class="brand-rail"></div>
+        <h2 class="slide-title">Owner-led extensibility model</h2>
+        <p class="slide-kicker">A quick way to explain ownership, technical fit, and lifecycle separation across the three SAP extensibility options.</p>
+        <div class="top-rule"></div>
+        <div class="lanes">
+          <div class="lane key-user">
+            <div class="lane-head">
+              <div class="head-number">01</div>
+              <div class="head-copy"><span class="head-action">Adapt</span><span class="head-title">Key User Extensibility</span></div>
+            </div>
+            <div class="lane-body">
+              <div class="lane-row"><span class="small-label">When</span><span><strong>Small in-app adaptation</strong>Field, UI, form, template, or analytics change.</span></div>
+              <div class="lane-row"><span class="small-label">Build</span><span><strong>No-code configuration</strong>Custom fields, business objects, logic, and CDS views.</span></div>
+              <div class="lane-row"><span class="small-label">Owner</span><span><strong>Key User</strong>Business-led changes without developer dependency.</span></div>
+              <div class="lane-row"><span class="small-label">Value</span><span><strong>Fast and governed</strong>Managed inside SAP S/4HANA Cloud.</span></div>
+            </div>
+            <div class="lane-foot">Runs in SAP S/4HANA Cloud</div>
+          </div>
+          <div class="lane developer-ext">
+            <div class="lane-head">
+              <div class="head-number">02</div>
+              <div class="head-copy"><span class="head-action">Extend</span><span class="head-title">Developer Extensibility</span></div>
+            </div>
+            <div class="lane-body">
+              <div class="lane-row"><span class="small-label">When</span><span><strong>ABAP logic close to SAP</strong>Tightly-coupled extensions and custom apps.</span></div>
+              <div class="lane-row"><span class="small-label">Build</span><span><strong>Released-object extensions</strong>Partner extensions and custom ABAP apps.</span></div>
+              <div class="lane-row"><span class="small-label">Owner</span><span><strong>ABAP Developer</strong>Technical changes using SAP-released objects.</span></div>
+              <div class="lane-row"><span class="small-label">Value</span><span><strong>More control in-app</strong>Broader development options than key user tools.</span></div>
+            </div>
+            <div class="lane-foot">Runs in SAP S/4HANA Cloud</div>
+          </div>
+          <div class="lane side-by-side">
+            <div class="lane-head">
+              <div class="head-number">03</div>
+              <div class="head-copy"><span class="head-action">Compose</span><span class="head-title">Side-by-Side Extensibility</span></div>
+            </div>
+            <div class="lane-body">
+              <div class="lane-row"><span class="small-label">When</span><span><strong>Independent app or service</strong>Loosely-coupled extension outside the core.</span></div>
+              <div class="lane-row"><span class="small-label">Build</span><span><strong>BTP application</strong>ABAP, Java, JavaScript, Python, and partner apps.</span></div>
+              <div class="lane-row"><span class="small-label">Owner</span><span><strong>Developer</strong>Application team owns delivery and release cadence.</span></div>
+              <div class="lane-row"><span class="small-label">Value</span><span><strong>Decoupled lifecycle</strong>Independent of SAP S/4HANA Cloud upgrades.</span></div>
+            </div>
+            <div class="lane-foot">Runs on SAP BTP</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="concept" id="v6">
+      <div class="concept-label"><span>Version 6</span><span>Hub and spokes</span></div>
+      <article class="slide v6">
+        <div class="brand-rail"></div>
+        <h2 class="slide-title">One SAP core, three extension paths</h2>
+        <p class="slide-kicker">This version puts SAP S/4HANA Cloud at the center and shows how each extension pattern relates to the core system.</p>
+        <div class="top-rule"></div>
+        <div class="hub">
+          <div class="connector l1"></div><div class="connector l2"></div><div class="connector l3"></div><div class="connector l4"></div>
+          <div class="center"><div><h3>SAP S/4HANA Cloud</h3><p style="margin-top:10px;color:#d9ecff;font-size:13px;">Public Edition extensibility landscape</p></div></div>
+          <div class="card hub-card">
+            <span class="small-label">Key User</span>
+            <h3 style="color:var(--sap-blue);">Configure and adapt</h3>
+            <p>Custom fields, UI layout, forms, templates, and analytics.</p>
+          </div>
+          <div class="card hub-card" style="grid-column:3;">
+            <span class="small-label">ABAP Developer</span>
+            <h3 style="color:var(--sap-blue-2);">Extend released objects</h3>
+            <p>Developer extensibility for partner extensions and custom apps.</p>
+          </div>
+          <div class="card hub-card" style="grid-row:2;">
+            <span class="small-label">Managed benefit</span>
+            <h3>Close to SAP lifecycle</h3>
+            <p>In-app options stay integrated with SAP S/4HANA Cloud.</p>
+          </div>
+          <div class="card hub-card teal" style="grid-column:3;grid-row:2;">
+            <span class="small-label">BTP side-by-side</span>
+            <h3 style="color:var(--sap-teal);">Compose independently</h3>
+            <p>Decoupled extensions and apps with their own lifecycle.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

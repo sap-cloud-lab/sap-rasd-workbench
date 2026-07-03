@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RASD Customer Release Workbench</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css?v=20260703-progress-store" />
+  </head>
+  <body data-page="overview">
+    <header class="topbar">
+      <a class="brand" href="#overview" aria-label="RASD Customer Release Workbench home">
+        <span class="sap-mark">SAP</span>
+        <span>
+          <strong>RASD Workbench</strong>
+          <small>Customer release impact</small>
+        </span>
+      </a>
+      <nav class="main-nav" aria-label="Workbench pages">
+        <button class="nav-link active" type="button" data-page="overview">Home</button>
+        <button class="nav-link" type="button" data-page="scope">Scope Items</button>
+        <button class="nav-link" type="button" data-page="whatsnew">Changes</button>
+        <button class="nav-link" type="button" data-page="apps">Apps & Roles</button>
+        <button class="nav-link" type="button" data-page="extensibility">Extensibility</button>
+        <button class="nav-link" type="button" data-page="deprecated">Deprecated</button>
+        <button class="nav-link" type="button" data-page="newfeatures">New Features</button>
+        <button class="nav-link" type="button" data-page="publicsector">Public Sector</button>
+        <button class="nav-link" type="button" data-page="coverage">Coverage</button>
+        <button class="nav-link" type="button" data-page="testplan">Test Plan</button>
+      </nav>
+      <button class="primary-action" id="exportRegister" type="button">Export action register</button>
+      <button class="secondary-action sync-action" id="exportProgress" type="button">Export progress</button>
+      <button class="secondary-action sync-action" id="importProgress" type="button">Import progress</button>
+      <span class="progress-status local" id="progressStatus">Progress: local backup</span>
+      <input id="stateInput" type="file" accept=".json" hidden />
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="pageTitle">
+        <div class="hero-copy">
+          <p class="system-label" id="sourceLabel">RASD 2608.0 export</p>
+          <h1 id="pageTitle">RASD review made simple.</h1>
+          <p>
+            Pick a review area. Mark what is relevant, not relevant, or still needs review.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-action" type="button" data-jump="whatsnew">Review changes</button>
+            <button class="secondary-action" type="button" data-jump="testplan">Open test plan</button>
+          </div>
+        </div>
+        <aside class="import-panel" aria-label="RASD data source">
+          <div>
+            <span class="metric-label">Current customer</span>
+            <strong id="customerName">Country Fire Authority</strong>
+          </div>
+          <div>
+            <span class="metric-label">Loaded source</span>
+            <strong id="loadedSource">RASD export loaded</strong>
+          </div>
+          <label class="upload-drop" for="zipInput">
+            <span>Upload another RASD ZIP</span>
+            <small>Uses the same five Excel files when available</small>
+            <input id="zipInput" type="file" accept=".zip" />
+          </label>
+          <p class="import-note" id="importNote">Preloaded with the supplied 2608.0 RASD ZIP.</p>
+        </aside>
+      </section>
+
+      <section class="summary-strip" aria-label="Priority release summary">
+        <button class="metric-card danger" type="button" data-jump="whatsnew" data-jump-priority="critical">
+          <span class="metric-label">Must review first</span>
+          <strong id="criticalCount">0</strong>
+          <small>Critical items in used scope</small>
+        </button>
+        <button class="metric-card warning" type="button" data-jump="whatsnew" data-jump-priority="action">
+          <span class="metric-label">Action queue</span>
+          <strong id="actionCount">0</strong>
+          <small>Action/review rows</small>
+        </button>
+        <button class="metric-card blue" type="button" data-jump="scope" data-jump-filter-key="scopeMode" data-jump-filter-value="used">
+          <span class="metric-label">Used scope changed</span>
+          <strong id="usedScopeCount">0</strong>
+          <small>Scope rows to consider</small>
+        </button>
+        <button class="metric-card teal" type="button" data-jump="scope" data-jump-filter-key="scopeMode" data-jump-filter-value="activated">
+          <span class="metric-label">Skipped by default</span>
+          <strong id="activatedOnlyCount">0</strong>
+          <small>Activated but not used</small>
+        </button>
+      </section>
+
+      <section class="workspace">
+        <aside class="side-panel" aria-label="Workbench navigation and filters">
+          <div class="panel-block">
+            <p class="system-label">Work streams</p>
+            <div id="workstreamList" class="workstream-list"></div>
+          </div>
+          <div class="panel-block">
+            <p class="system-label">Quick filter</p>
+            <label class="search-box">
+              <span>Search</span>
+              <input id="globalSearch" type="search" placeholder="Scope, app, role, CDS, title" />
+            </label>
+            <div class="segmented" id="priorityFilter" aria-label="Priority filter">
+              <button class="active" type="button" data-priority="all">All</button>
+              <button type="button" data-priority="critical">Critical</button>
+              <button type="button" data-priority="action">Action</button>
+              <button type="button" data-priority="new">New</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="content-panel" aria-live="polite">
+          <div class="view-heading">
+            <div>
+              <p class="system-label" id="viewKicker">Start here</p>
+              <h2 id="viewTitle">Choose a review area</h2>
+            </div>
+            <div class="view-actions" id="viewActions"></div>
+          </div>
+          <div id="pageContent"></div>
+        </section>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="data.js"></script>
+    <script src="review-state-backup.js?v=20260703-recovered-progress"></script>
+    <script src="progress-store.js?v=20260703-progress-store"></script>
+    <script src="extensibility-inventory.js"></script>
+    <script src="sap-help-enrichment.js?v=20260628-full-sap-help-harvest"></script>
+    <script src="app.js?v=20260703-progress-store"></script>
+  </body>
+</html>
