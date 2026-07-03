@@ -45,8 +45,7 @@ a {
 
 .suite-topbar {
   height: 66px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 24px;
   padding: 0 36px;
@@ -77,7 +76,6 @@ a {
 }
 
 .brand {
-  justify-self: start;
   gap: 20px;
   color: var(--ink);
   white-space: nowrap;
@@ -89,15 +87,19 @@ a {
 }
 
 .sap-logo {
-  width: 74px;
-  height: 37px;
+  width: 72px;
+  height: 35px;
   display: block;
   flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .top-nav {
-  grid-column: 2;
-  justify-self: center;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
   justify-content: center;
   gap: 18px;
   height: 100%;
@@ -687,19 +689,6 @@ td {
 }
 
 @media (max-width: 1280px) {
-  .suite-topbar {
-    grid-template-columns: 1fr;
-    height: auto;
-    gap: 12px;
-    padding: 14px 24px;
-  }
-
-  .top-nav {
-    grid-column: auto;
-    justify-content: flex-start;
-    height: 42px;
-  }
-
   .main-layout {
     grid-template-columns: 1fr;
   }
@@ -719,6 +708,21 @@ td {
 }
 
 @media (max-width: 1040px) {
+  .suite-topbar {
+    height: auto;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 24px;
+  }
+
+  .top-nav {
+    position: static;
+    transform: none;
+    justify-content: flex-start;
+    height: 42px;
+  }
+
   .tool-cards,
   .insight-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
