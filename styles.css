@@ -3058,6 +3058,109 @@ body[data-page="extensibility"] .ext-table-panel {
   font-size: 13px;
 }
 
+.ai-updates-layout {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-hero-card {
+  border-top: 4px solid var(--green);
+}
+
+.ai-kpis .coverage-kpi {
+  min-height: 126px;
+}
+
+.ai-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  align-items: start;
+}
+
+.ai-update-list {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ai-update-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 59, 113, 0.06);
+}
+
+.ai-card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  gap: 14px;
+  align-items: start;
+}
+
+.ai-card-top h3 {
+  margin: 0;
+  color: var(--sap-deep);
+  font-size: 18px;
+  line-height: 1.28;
+}
+
+.ai-update-card > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.ai-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ai-detail-box {
+  min-height: 116px;
+  padding: 11px;
+  border: 1px solid #d6e5f5;
+  border-radius: 6px;
+  background: #f8fbfe;
+}
+
+.ai-detail-box span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--sap-blue);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.ai-detail-box p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.42;
+}
+
+.ai-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+}
+
+.ai-card-actions .review-note-toggle {
+  flex: 1 1 220px;
+}
+
+.ai-side-panel {
+  position: sticky;
+  top: 86px;
+}
+
 .release-lane {
   min-width: 0;
 }
@@ -3180,9 +3283,15 @@ body[data-page="extensibility"] .ext-table-panel {
   .cloud-alm-pack-card,
   .coverage-hero-card,
   .coverage-main-grid,
+  .ai-main-grid,
+  .ai-detail-grid,
   .ext-fix-layout,
   .ext-fix-panels {
     grid-template-columns: 1fr;
+  }
+
+  .ai-side-panel {
+    position: static;
   }
 
   .coverage-kpis {
@@ -3232,6 +3341,7 @@ body[data-page="extensibility"] .ext-table-panel {
   .cloud-alm-pack-grid,
   .cloud-alm-pack-card,
   .coverage-kpis,
+  .ai-detail-grid,
   .home-card-breakdown,
   .source-screenshot-grid {
     grid-template-columns: 1fr;

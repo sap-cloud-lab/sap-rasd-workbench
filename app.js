@@ -61,9 +61,93 @@
     deprecated: { title: "Deprecated and successor objects", kicker: "No duplicate chasing", icon: "6" },
     newfeatures: { title: "New features explorer", kicker: "Useful opportunities", icon: "7" },
     publicsector: { title: "Public sector highlights", kicker: "Australia and PSM focus", icon: "8" },
+    aiupdates: { title: "AI updates and adoption signals", kicker: "Suite branch updates", icon: "10" },
     coverage: { title: "AI test coverage builder", kicker: "RASD to test coverage", icon: "9" },
     testplan: { title: "Release test pack", kicker: "Cloud ALM upload", icon: "9" }
   };
+
+  const aiUpdateItems = [
+    {
+      id: "maintenance-notification-fit",
+      "Title(Title)": "AI-assisted maintenance notification fit",
+      "Description(Description)": "Review AI-assisted maintenance notification triage as an adoption candidate. This is not mandatory 2608 regression testing unless the maintenance process owner wants to pilot it now.",
+      "Action(Action)": "Review",
+      "Type(Type)": "AI adoption signal",
+      "Category(Category)": "Maintenance",
+      "Scope Items(Scope Items)": "4HI, 4HH, 4VT",
+      "AI Area": "Maintenance and operations",
+      "Suite Signal": "The suite branch flagged AI-assisted maintenance notification fit as a top adoption action.",
+      "Why CFA Cares": "Useful if maintenance teams receive high volumes of notifications or alerts and need faster triage. The release risk is adoption governance, not a standard SAP process break.",
+      "How to Validate": "Confirm the current notification triage flow, owner, volume, and pain points. If the owner wants to pilot AI assistance, create a small before/after test with one real notification and capture the expected summary or decision support.",
+      "Next Step": "Open Maintenance Watch, assign the maintenance owner, and move to future adoption unless there is a committed pilot before production upgrade.",
+      "Source Path": "SAP Adoption Intelligence Suite branch - AI Use Cases and Top Adoption Actions",
+      "Tool Page": "maintenance"
+    },
+    {
+      id: "joule-release-adoption",
+      "Title(Title)": "Joule and AI-assisted release adoption candidates",
+      "Description(Description)": "Treat Joule and SAP AI updates as adoption candidates unless SAP marks a change as mandatory or it directly affects an active business process.",
+      "Action(Action)": "Review",
+      "Type(Type)": "AI adoption signal",
+      "Category(Category)": "Joule / SAP AI",
+      "Scope Items(Scope Items)": "",
+      "AI Area": "Cross-application adoption",
+      "Suite Signal": "The suite branch positions Joule and AI-assisted signals inside the same release-readiness rhythm as RASD, not as separate hype items.",
+      "Why CFA Cares": "AI enablement can create useful demos, but it needs process ownership, security review, clean-core routing, and a clear reason to adopt.",
+      "How to Validate": "For each AI feature, confirm the process owner, SAP source, required role or license, data exposure, and whether it helps a used CFA process. Do not add to regression testing unless it changes an existing process.",
+      "Next Step": "Use this page to mark each AI update relevant, not relevant, or adoption backlog; then create Cloud ALM tasks only for committed pilots.",
+      "Source Path": "SAP Adoption Intelligence Suite branch - AI Use Cases",
+      "Tool Page": "newfeatures"
+    },
+    {
+      id: "document-ai-master-data",
+      "Title(Title)": "Document AI and master-data creation scenarios",
+      "Description(Description)": "Document AI and master-data creation ideas need business ownership and clean-core routing before they become a project or test case.",
+      "Action(Action)": "Review",
+      "Type(Type)": "AI adoption signal",
+      "Category(Category)": "Document AI / Master data",
+      "Scope Items(Scope Items)": "1RO, BMD, BNX",
+      "AI Area": "Document processing and master data",
+      "Suite Signal": "The suite branch calls out document AI and master-data creation scenarios as candidates that must be routed through process ownership and clean-core design.",
+      "Why CFA Cares": "These ideas may reduce manual data entry, but they can also touch approvals, integration, authorisation, and master-data governance.",
+      "How to Validate": "Pick one real document or master-data use case, identify the source document, target SAP object, owner, exception handling, audit requirement, and whether released APIs or standard apps can support the process.",
+      "Next Step": "Use Clean Core Object Navigator first; only then decide whether the scenario belongs in BTP, in-app extensibility, or a manual backlog.",
+      "Source Path": "SAP Adoption Intelligence Suite branch - AI Use Cases",
+      "Tool Page": "cleanCore"
+    },
+    {
+      id: "clean-core-route-for-ai",
+      "Title(Title)": "Clean-core route for AI ideas",
+      "Description(Description)": "AI ideas should be converted into released APIs, CDS views, in-app extensibility, or BTP side-by-side routes before build starts.",
+      "Action(Action)": "Review",
+      "Type(Type)": "Clean-core guardrail",
+      "Category(Category)": "Clean Core / BTP",
+      "Scope Items(Scope Items)": "",
+      "AI Area": "Architecture guardrail",
+      "Suite Signal": "The suite branch links AI ideas to Clean Core Object Navigator so ideas become buildable, supportable routes.",
+      "Why CFA Cares": "A useful AI idea can still become a future upgrade risk if it depends on unreleased objects, screen scraping, or unsupported integration routes.",
+      "How to Validate": "For every AI idea, identify the SAP object, required data, write-back path, security model, and whether the target object is released for developer extensibility, integration, or side-by-side use.",
+      "Next Step": "Open Clean Core Object Navigator, document the released API/CDS/BTP route, and block ideas that need unsupported objects.",
+      "Source Path": "SAP Adoption Intelligence Suite branch - Clean Core route",
+      "Tool Page": "cleanCore"
+    },
+    {
+      id: "ai-test-coverage-builder",
+      "Title(Title)": "AI test coverage builder for S/4HANA Cloud",
+      "Description(Description)": "Use RASD impacts to decide which regression tests should run, then generate Cloud ALM workbooks, owners, evidence checklists, and pass/fail tracking.",
+      "Action(Action)": "Review",
+      "Type(Type)": "Test coverage",
+      "Category(Category)": "Cloud ALM",
+      "Scope Items(Scope Items)": "J58, J59, J60, J62",
+      "AI Area": "Release testing",
+      "Suite Signal": "The suite branch frames RASD as the input signal and Cloud ALM as the execution layer for targeted release testing.",
+      "Why CFA Cares": "This avoids asking users to retest 80+ scope items blindly. It separates mandatory release checks from optional adoption and gives owners a clear test pack.",
+      "How to Validate": "Start from reviewed RASD items, compare against Process Navigator or SAP automate availability, keep one test case per scope item or workstream, and export the Cloud ALM workbook with evidence expectations.",
+      "Next Step": "Open Coverage or Test Plan, then download the Cloud ALM workbook for the reviewed release checks.",
+      "Source Path": "SAP Adoption Intelligence Suite branch - AI Test Coverage Builder",
+      "Tool Page": "coverage"
+    }
+  ].map((item) => ({ ...item, reviewKey: `ai:${item.id}` }));
 
   const pageContent = document.querySelector("#pageContent");
   const viewTitle = document.querySelector("#viewTitle");
@@ -1910,6 +1994,7 @@
       deprecated: [...data.deprecatedObjects, ...data.derived.deprecatedUsed],
       newfeatures: data.derived.newUsed,
       publicsector: data.derived.publicSectorHighlights,
+      aiupdates: aiUpdateRows(),
       coverage: targetedTestItems("", { includeFuture: true }),
       testplan: data.derived.tests
     };
@@ -2003,6 +2088,7 @@
     if (state.page === "deprecated") renderDeprecated();
     if (state.page === "newfeatures") renderNewFeatures();
     if (state.page === "publicsector") renderPublicSector();
+    if (state.page === "aiupdates") renderAiUpdates();
     if (state.page === "coverage") renderCoverageBuilder();
     if (state.page === "testplan") renderTestPlan();
   }
@@ -2075,7 +2161,9 @@
       </label>
     `;
     const buttons = (actions[state.page] || [])
-      .map(([page, label]) => `<button class="secondary-action" type="button" data-jump="${page}">${escapeHtml(label)}</button>`)
+      .map(([page, label]) => page === "suite"
+        ? `<a class="secondary-action" href="suite/" target="_blank" rel="noopener">${escapeHtml(label)}</a>`
+        : `<button class="secondary-action" type="button" data-jump="${page}">${escapeHtml(label)}</button>`)
       .join("");
     return `${search}${buttons}`;
   }
@@ -2104,6 +2192,7 @@
       item("deprecated", "Review deprecated items", "Old objects and successors", "5", "warning"),
       item("newfeatures", "Review new features", "Optional items worth exploring", "6", "green"),
       item("publicsector", "Public sector highlights", `${customerProfile.country} and PSM release items`, "7", "teal"),
+      item("aiupdates", "Review AI updates", "Suite branch adoption signals", "10", "green"),
       item("coverage", "Build test coverage", "What to run, owner, evidence", "8", "blue"),
       item("testplan", "Build test pack", "Cloud ALM upload workbooks", "9", "blue")
     ];
@@ -2172,6 +2261,7 @@
       deprecated: '<path d="M12 3 2 21h20L12 3Z" /><path d="M12 9v5M12 17h.01" />',
       newfeatures: '<path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 16.9 6.6 19.8l1-6.1-4.4-4.3 6.1-.9L12 3Z" />',
       publicsector: '<path d="M4 20h16" /><path d="M6 10v8M10 10v8M14 10v8M18 10v8" /><path d="M3 10h18L12 4 3 10Z" />',
+      aiupdates: '<path d="M12 3l1.7 4.5L18 9.2l-4.3 1.7L12 15l-1.7-4.1L6 9.2l4.3-1.7L12 3Z" /><path d="M5 15l.9 2.1L8 18l-2.1.9L5 21l-.9-2.1L2 18l2.1-.9L5 15Z" /><path d="M19 14l.7 1.7 1.8.8-1.8.8L19 19l-.7-1.7-1.8-.8 1.8-.8L19 14Z" />',
       coverage: '<path d="M4 5h16" /><path d="M4 12h16" /><path d="M4 19h16" /><path d="m7 5 2 2 4-4" /><path d="m7 12 2 2 4-4" /><path d="M7 19h.01" />',
       testplan: '<path d="M9 4h6l1 2h3v15H5V6h3l1-2Z" /><path d="M9 12l2 2 4-4M9 18h6" />'
     };
@@ -4220,6 +4310,119 @@
             </article>
           `;
         }).join("") : empty("No public-sector highlights matched this RASD export.")}
+      </div>
+    `;
+  }
+
+  function aiUpdateRows() {
+    return aiUpdateItems;
+  }
+
+  function renderAiUpdates() {
+    const rows = sortByReview(applyGlobalFilters(aiUpdateRows(), false));
+    const progress = reviewProgress(rows);
+    const architectureRows = rows.filter((row) => /clean|btp|document|master/i.test([getCategory(row), get(row, "AI Area")].join(" ")));
+    const testingRows = rows.filter((row) => /test|cloud alm|coverage/i.test([getCategory(row), getType(row), getTitle(row)].join(" ")));
+    pageContent.innerHTML = `
+      <div class="filter-row">
+        <button class="primary-action" type="button" data-jump="coverage">Open AI test coverage builder</button>
+        <a class="secondary-action" href="suite/" target="_blank" rel="noopener">Open suite branch page</a>
+        <div class="review-summary" aria-label="AI update summary">
+          <span>${rows.length} suite updates</span>
+          <span>${progress.reviewed} reviewed</span>
+          <span>${progress.remaining} still to review</span>
+        </div>
+      </div>
+      <section class="ai-updates-layout">
+        <div class="coverage-hero-card ai-hero-card">
+          <div>
+            <p class="system-label">Embedded from suite branch</p>
+            <h3>AI updates are adoption signals, not another giant test list.</h3>
+            <p>These items came from the SAP Adoption Intelligence Suite branch. Use them to decide whether an AI idea should become a release test, a future-adoption backlog item, or a clean-core design discussion.</p>
+          </div>
+          <div class="coverage-flow" aria-label="AI update review flow">
+            <span>AI signal</span>
+            <span>Process owner</span>
+            <span>Clean-core route</span>
+            <span>Pilot or backlog</span>
+            <span>Cloud ALM only if committed</span>
+          </div>
+        </div>
+
+        <div class="coverage-kpis ai-kpis">
+          ${coverageKpi("AI signals", rows.length, "Suite branch updates embedded into the RASD workbench.", "green")}
+          ${coverageKpi("Architecture checks", architectureRows.length, "Document AI, BTP, released API/CDS, and clean-core routing decisions.", "teal")}
+          ${coverageKpi("Testing link", testingRows.length, "Items that connect directly to Coverage or Cloud ALM test-pack work.", "blue")}
+          ${coverageKpi("Still to review", progress.remaining, "Mark relevant, not relevant, or backlog before taking to stakeholders.", "warning")}
+        </div>
+
+        <div class="ai-main-grid">
+          <section class="ai-update-list">
+            ${rows.map(aiUpdateCard).join("") || empty("No AI updates match the current search.")}
+          </section>
+          <aside class="coverage-panel ai-side-panel">
+            <div class="coverage-panel-heading">
+              <div>
+                <p class="system-label">How to use this</p>
+                <h3>Keep the conversation practical</h3>
+              </div>
+            </div>
+            <ul class="coverage-evidence-list">
+              <li>Do not add an AI item to regression testing unless it changes an existing used process.</li>
+              <li>For pilots, confirm the process owner, data exposure, target SAP object, and expected outcome.</li>
+              <li>Route build ideas through released APIs, CDS views, in-app extensibility, or BTP side-by-side design.</li>
+              <li>Use Coverage only when the AI update becomes a real release test or Cloud ALM task.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+    `;
+  }
+
+  function aiUpdateCard(row) {
+    const key = reviewKey(row);
+    const toolPage = get(row, "Tool Page");
+    const toolLabel = {
+      coverage: "Open coverage",
+      newfeatures: "Open new features",
+      cleanCore: "Open clean core navigator",
+      maintenance: "Open suite maintenance"
+    }[toolPage] || "Open next step";
+    const toolAction = toolPage === "cleanCore"
+      ? `<a class="table-action" href="suite/tools/clean-core-object-navigator/" target="_blank" rel="noopener">${escapeHtml(toolLabel)}</a>`
+      : toolPage === "maintenance"
+        ? `<a class="table-action" href="suite/#workspace" target="_blank" rel="noopener">${escapeHtml(toolLabel)}</a>`
+        : `<button class="table-action" type="button" data-jump="${escapeHtml(toolPage || "coverage")}">${escapeHtml(toolLabel)}</button>`;
+    return `
+      <article class="ai-update-card ${reviewRowClass(row)}">
+        <div class="ai-card-top">
+          <div>
+            <div class="badges">${badge(getAction(row), "warning")}${badge(getType(row), "teal")}${badge(getCategory(row), "green")}${badge(reviewLabel(effectiveReviewEntry(row).status), reviewTone(effectiveReviewEntry(row).status))}</div>
+            <h3>${escapeHtml(getTitle(row))}</h3>
+          </div>
+          ${reviewSelect(row, true)}
+        </div>
+        <p>${escapeHtml(get(row, "Description(Description)", "Description"))}</p>
+        <div class="ai-detail-grid">
+          ${aiDetail("Suite signal", get(row, "Suite Signal"))}
+          ${aiDetail("Why CFA should care", get(row, "Why CFA Cares"))}
+          ${aiDetail("How to validate", get(row, "How to Validate"))}
+          ${aiDetail("Next step", get(row, "Next Step"))}
+        </div>
+        <div class="ai-card-actions">
+          ${toolAction}
+          ${reviewNoteToggle(key, "Owner, decision, pilot scope, or why this is not relevant")}
+        </div>
+        <p class="row-meta">Source: ${escapeHtml(get(row, "Source Path"))}</p>
+      </article>
+    `;
+  }
+
+  function aiDetail(label, text) {
+    return `
+      <div class="ai-detail-box">
+        <span>${escapeHtml(label)}</span>
+        <p>${escapeHtml(text)}</p>
       </div>
     `;
   }
