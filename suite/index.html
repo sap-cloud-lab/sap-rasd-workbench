@@ -4,302 +4,302 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SAP Adoption Intelligence Suite</title>
-    <meta name="description" content="A consolidated SAP Public Cloud consultant workspace." />
+    <meta
+      name="description"
+      content="An integrated SAP Public Cloud workbench for release readiness, extensibility, maintenance watch and clean-core navigation."
+    />
     <link rel="stylesheet" href="styles.css" />
-    <style>
-      .nav-item i,
-      .tool-link i,
-      .action-icon i,
-      .global-search i,
-      .icon-button i,
-      .panel-actions i,
-      .launch-button i,
-      .task i,
-      .export-item i,
-      .status-line i,
-      .sap-core i {
-        width: 20px;
-        height: 20px;
-        stroke-width: 2;
-      }
-    </style>
   </head>
   <body>
-    <main class="suite-shell">
-      <header class="topbar">
-        <a class="brand" href="./" aria-label="SAP Adoption Intelligence Suite home">
-          <span class="sap-logo">SAP</span>
-          <strong>SAP Adoption Intelligence Suite</strong>
+    <header class="suite-topbar">
+      <a class="brand" href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/" aria-label="SAP Adoption Intelligence Suite home">
+        <span class="sap-logo">SAP</span>
+        <strong>SAP Adoption Intelligence Suite</strong>
+      </a>
+
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a class="active" href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/">Home</a>
+        <a href="#workspace">Workspace</a>
+        <a href="#reports">Reports</a>
+        <a href="#settings">Settings</a>
+      </nav>
+
+      <div class="top-actions">
+        <button class="icon-only" type="button" aria-label="Search"><i data-lucide="search"></i></button>
+        <button class="icon-only has-badge" type="button" aria-label="Notifications"><i data-lucide="bell"></i><span>3</span></button>
+        <button class="icon-only" type="button" aria-label="Help"><i data-lucide="circle-help"></i></button>
+        <div class="user-block">
+          <span>
+            <strong>Maya Desai</strong>
+            <small>Consultant</small>
+          </span>
+          <b>MD</b>
           <i data-lucide="chevron-down"></i>
-        </a>
-        <div class="topbar-actions">
-          <button class="landscape-select" type="button">
-            All Landscapes <i data-lucide="chevron-down"></i>
-          </button>
-          <label class="global-search">
-            <i data-lucide="search"></i>
-            <input placeholder="Search objects, transactions, notes..." />
-            <kbd>⌘ K</kbd>
-          </label>
-          <button class="icon-button" type="button" aria-label="Help"><i data-lucide="circle-help"></i></button>
-          <button class="icon-button" type="button" aria-label="Notifications"><i data-lucide="bell"></i></button>
-          <div class="user-block">
-            <span>
-              <strong>Maya Desai</strong>
-              <small>Consultant</small>
-            </span>
-            <span class="avatar">MD</span>
-            <i data-lucide="chevron-down"></i>
-          </div>
         </div>
-      </header>
+      </div>
+    </header>
 
-      <aside class="sidebar">
-        <nav class="nav-group" aria-label="Primary navigation">
-          <a class="nav-item active" href="./"><i data-lucide="home"></i><span>Home</span></a>
-          <a class="nav-item" href="#workspace"><i data-lucide="grid-3x3"></i><span>Workspace</span></a>
-          <a class="nav-item" href="#reports"><i data-lucide="bar-chart-3"></i><span>Reports</span></a>
-          <a class="nav-item" href="#tasks"><i data-lucide="clipboard-check"></i><span>Task Center</span></a>
-          <a class="nav-item" href="#settings"><i data-lucide="settings"></i><span>Settings</span></a>
-        </nav>
+    <main class="suite-page">
+      <section class="hero-copy">
+        <h1>SAP Adoption Intelligence Suite</h1>
+        <p>An integrated workbench to discover, assess, prepare and govern your SAP Public Cloud journey with confidence.</p>
+      </section>
 
-        <section class="sidebar-section">
-          <p>Suite tools</p>
-          <div class="tool-list">
-            <a class="tool-link active blue" href="tools/extensibility-explorer/"><i data-lucide="puzzle"></i><span>Extensibility Explorer</span></a>
-            <a class="tool-link teal" href="tools/rasd-workbench/"><i data-lucide="clipboard-list"></i><span>RASD Workbench</span></a>
-            <a class="tool-link cyan" href="tools/maintenance-watch/"><i data-lucide="calendar-clock"></i><span>Public Maintenance Watch</span></a>
-            <a class="tool-link green" href="tools/clean-core-object-navigator/"><i data-lucide="layers-3"></i><span>Clean Core Object Navigator</span></a>
-          </div>
-        </section>
-
-        <nav class="nav-group lower" aria-label="Supporting navigation">
-          <a class="nav-item" href="#whats-new"><i data-lucide="lightbulb"></i><span>What's New</span><b>6</b></a>
-          <a class="nav-item" href="tools/maintenance-watch/"><i data-lucide="calendar-clock"></i><span>Release Calendar</span></a>
-          <a class="nav-item" href="#help"><i data-lucide="circle-help"></i><span>Help & Learning</span></a>
-        </nav>
-
-        <button class="collapse" type="button">Collapse</button>
-      </aside>
-
-      <section class="content">
-        <div class="page-heading">
-          <div>
-            <h1>Good morning, Maya</h1>
-            <p>Here's what's happening across your landscapes.</p>
-          </div>
-          <div class="refresh">
-            <span>Last refreshed: Today, 08:15 AM</span>
-            <button type="button"><i data-lucide="refresh-cw"></i> Refresh</button>
-          </div>
-        </div>
-
-        <section class="recommended-card" aria-labelledby="recommended-title">
-          <h2 id="recommended-title">Recommended Next Actions</h2>
-          <div class="action-grid">
-            <article class="action-item">
-              <a class="action-icon cyan" href="tools/maintenance-watch/" aria-label="Review upcoming changes"><i data-lucide="eye"></i></a>
-              <div>
-                <a class="action-title" href="tools/maintenance-watch/">Review 26 upcoming changes</a>
-                <p>High impact to custom code in S/4HANA</p>
-                <a href="tools/maintenance-watch/">Go to Public Maintenance Watch</a>
+      <section class="main-layout">
+        <div class="left-stage">
+          <section class="tool-cards" aria-label="Suite tools">
+            <article class="tool-card blue">
+              <div class="tool-head">
+                <span class="tool-icon"><i data-lucide="puzzle"></i></span>
+                <div>
+                  <h2>Extensibility Explorer</h2>
+                  <p>Discover custom code and key user extensibility across your landscape.</p>
+                </div>
               </div>
-            </article>
-            <article class="action-item">
-              <a class="action-icon blue" href="tools/extensibility-explorer/" aria-label="Analyze extensibility risks"><i data-lucide="puzzle"></i></a>
-              <div>
-                <a class="action-title" href="tools/extensibility-explorer/">Analyze 12 critical extensibility risks</a>
-                <p>Custom code usage of deprecated APIs</p>
-                <a href="tools/extensibility-explorer/">Go to Extensibility Explorer</a>
+              <a class="launch-link" href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/extensibility-explorer/">
+                Launch Explorer <i data-lucide="arrow-right"></i>
+              </a>
+              <div class="card-metrics">
+                <div><span>Objects Scanned</span><strong>18,542</strong></div>
+                <div><span>At Risk</span><strong class="risk-value">317</strong></div>
               </div>
+              <footer><span>Last scan: Today, 08:15 AM</span><small><i data-lucide="check-circle-2"></i> Up to date</small></footer>
             </article>
-            <article class="action-item">
-              <a class="action-icon teal" href="tools/rasd-workbench/" aria-label="Validate RASD items"><i data-lucide="clipboard-list"></i></a>
-              <div>
-                <a class="action-title" href="tools/rasd-workbench/">Validate 48 RASD open items</a>
-                <p>SD, MM processes affected</p>
-                <a href="tools/rasd-workbench/">Go to RASD Workbench</a>
-              </div>
-            </article>
-            <article class="action-item">
-              <a class="action-icon green" href="tools/clean-core-object-navigator/" aria-label="Check clean core incompatibilities"><i data-lucide="layers-3"></i></a>
-              <div>
-                <a class="action-title" href="tools/clean-core-object-navigator/">Check 152 clean core incompatibilities</a>
-                <p>Conflicts with SAP standard</p>
-                <a href="tools/clean-core-object-navigator/">Go to Clean Core Object Navigator</a>
-              </div>
-            </article>
-          </div>
-        </section>
 
-        <nav class="tabs" aria-label="Suite tools">
-          <a class="active" href="tools/extensibility-explorer/">Extensibility Explorer</a>
-          <a href="tools/rasd-workbench/">RASD Workbench</a>
-          <a href="tools/maintenance-watch/">Public Maintenance Watch</a>
-          <a href="tools/clean-core-object-navigator/">Clean Core Object Navigator</a>
-        </nav>
+            <article class="tool-card teal">
+              <div class="tool-head">
+                <span class="tool-icon"><i data-lucide="clipboard-list"></i></span>
+                <div>
+                  <h2>RASD Workbench</h2>
+                  <p>Review, analyze and document requirements and solution designs.</p>
+                </div>
+              </div>
+              <a class="launch-link" href="https://sap-cloud-lab.github.io/sap-rasd-workbench/">
+                Launch Workbench <i data-lucide="arrow-right"></i>
+              </a>
+              <div class="card-metrics">
+                <div><span>Active Projects</span><strong>12</strong></div>
+                <div><span>Open Items</span><strong class="risk-value">48</strong></div>
+              </div>
+              <footer><span>Last update: Yesterday, 04:30 PM</span><small><i data-lucide="check-circle-2"></i> Up to date</small></footer>
+            </article>
 
-        <section class="workspace-panel" id="workspace">
-          <div class="panel-header">
-            <div>
-              <h2>Extensibility Overview</h2>
-              <div class="filters-row">
+            <article class="tool-card cyan">
+              <div class="tool-head">
+                <span class="tool-icon"><i data-lucide="eye"></i></span>
+                <div>
+                  <h2>Public Maintenance Watch</h2>
+                  <p>Monitor SAP public cloud maintenance and upcoming changes.</p>
+                </div>
+              </div>
+              <a class="launch-link" href="https://sap-cloud-lab.github.io/sap-maintenance-watch/">
+                Launch Watch <i data-lucide="arrow-right"></i>
+              </a>
+              <div class="card-metrics">
+                <div><span>Upcoming Changes</span><strong>26</strong></div>
+                <div><span>Critical</span><strong class="critical">3</strong></div>
+              </div>
+              <footer><span>Last update: Today, 07:45 AM</span><small><i data-lucide="check-circle-2"></i> Up to date</small></footer>
+            </article>
+
+            <article class="tool-card green">
+              <div class="tool-head">
+                <span class="tool-icon"><i data-lucide="layers-3"></i></span>
+                <div>
+                  <h2>Clean Core Object Navigator</h2>
+                  <p>Navigate application objects and evaluate clean core compatibility.</p>
+                </div>
+              </div>
+              <a class="launch-link" href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/clean-core-object-navigator/">
+                Launch Navigator <i data-lucide="arrow-right"></i>
+              </a>
+              <div class="card-metrics">
+                <div><span>Objects Analyzed</span><strong>24,781</strong></div>
+                <div><span>Incompatible</span><strong class="risk-value">152</strong></div>
+              </div>
+              <footer><span>Last update: Today, 08:00 AM</span><small><i data-lucide="check-circle-2"></i> Up to date</small></footer>
+            </article>
+          </section>
+
+          <section class="workspace-preview" id="workspace" aria-labelledby="workspace-title">
+            <div class="workspace-header">
+              <h2 id="workspace-title">Workspace Preview</h2>
+              <div class="workspace-controls">
                 <label>
                   Landscape:
                   <select>
                     <option>SAP S/4HANA Public Cloud</option>
                     <option>Public Sector Landscape</option>
-                    <option>Two-tier ERP Landscape</option>
+                    <option>2-Tier ERP Landscape</option>
                   </select>
                 </label>
-                <label>
-                  Application:
-                  <select>
-                    <option>All</option>
-                    <option>Finance</option>
-                    <option>Procurement</option>
-                    <option>Sales</option>
-                  </select>
-                </label>
+                <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/">Refresh</a>
+                <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/extensibility-explorer/">View Full Workspace <i data-lucide="external-link"></i></a>
               </div>
             </div>
-            <div class="panel-actions">
-              <button type="button"><i data-lucide="filter"></i> Filters (3)</button>
-              <button type="button">Save View</button>
-              <a class="launch-button" href="tools/extensibility-explorer/">Launch tool <i data-lucide="external-link"></i></a>
-              <button class="icon-button tight" type="button" aria-label="More options"><i data-lucide="more-vertical"></i></button>
+
+            <div class="workspace-grid">
+              <aside class="filter-panel" aria-label="Workspace filters">
+                <select>
+                  <option>Adoption Overview</option>
+                  <option>Extensibility Overview</option>
+                  <option>Release Readiness</option>
+                  <option>AI Use Cases</option>
+                </select>
+                <div class="filter-box">
+                  <div class="filter-title"><strong>Filters</strong><a href="#">Clear All</a></div>
+                  <label>Application<select><option>All</option><option>Finance</option><option>Procurement</option></select></label>
+                  <label>Object Type<select><option>All</option><option>CDS/API</option><option>Extensibility</option></select></label>
+                  <label>Status<select><option>All</option><option>Action Required</option><option>Ready</option></select></label>
+                  <div class="risk-checks">
+                    <span>Risk Level</span>
+                    <label><input type="checkbox" /> <i class="red-dot"></i> High</label>
+                    <label><input type="checkbox" /> <i class="amber-dot"></i> Medium</label>
+                    <label><input type="checkbox" /> <i class="green-dot"></i> Low</label>
+                  </div>
+                  <button type="button">Apply Filters</button>
+                </div>
+              </aside>
+
+              <div class="preview-content">
+                <section class="summary-strip" aria-label="Portfolio summary">
+                  <article><span>2608 Readiness Items</span><strong>48</strong><small>RASD open items</small></article>
+                  <article><span>Extensibility At Risk</span><strong>317</strong><small>1.7% of scanned objects</small></article>
+                  <article><span>Clean Core Watch</span><strong>152</strong><small>incompatibilities</small></article>
+                  <article><span>AI Signals</span><strong>9</strong><small>tracked use cases</small></article>
+                </section>
+
+                <section class="insight-grid" aria-label="Workspace insights">
+                  <article class="insight-card release">
+                    <div class="insight-label"><i data-lucide="calendar-clock"></i><span>2608 Release Readiness</span></div>
+                    <h3>2608 is the readiness anchor for test, development and production planning.</h3>
+                    <ul>
+                      <li>APJ release planning and preliminary What's New review are tracked through Public Maintenance Watch.</li>
+                      <li>RASD impact cards focus the 2608 review on used scope, IAM successor apps and Cloud ALM test packs.</li>
+                      <li>Priority actions include predecessor app usage checks, role activation and cutover readiness.</li>
+                    </ul>
+                    <a href="https://sap-cloud-lab.github.io/sap-maintenance-watch/">Open 2608 watch <i data-lucide="external-link"></i></a>
+                  </article>
+
+                  <article class="insight-card ext">
+                    <div class="insight-label"><i data-lucide="puzzle"></i><span>Extensibility Explorer</span></div>
+                    <h3>Custom-code visibility is the fastest way to separate real risk from noise.</h3>
+                    <div class="mini-bars" aria-label="Extensibility risk by object type">
+                      <div><span>Custom Fields</span><b style="width: 96%"></b><em>4,512</em></div>
+                      <div><span>Key User Extensibility</span><b style="width: 82%"></b><em>3,842</em></div>
+                      <div><span>Business Logic</span><b style="width: 63%"></b><em>2,945</em></div>
+                      <div><span>Integrations</span><b style="width: 45%"></b><em>2,105</em></div>
+                    </div>
+                    <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/extensibility-explorer/">Open Extensibility Explorer <i data-lucide="external-link"></i></a>
+                  </article>
+
+                  <article class="insight-card ai">
+                    <div class="insight-label"><i data-lucide="sparkles"></i><span>AI Use Cases</span></div>
+                    <h3>AI opportunities sit inside the same release and clean-core governance rhythm.</h3>
+                    <ul>
+                      <li>Joule and AI-assisted maintenance signals can be reviewed as release-adoption candidates.</li>
+                      <li>Document AI and master-data creation scenarios need process ownership and clean-core routing.</li>
+                      <li>Clean Core Object Navigator helps turn AI ideas into released APIs, CDS views or BTP side-by-side paths.</li>
+                    </ul>
+                    <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/clean-core-object-navigator/">Explore AI-ready objects <i data-lucide="external-link"></i></a>
+                  </article>
+                </section>
+
+                <section class="risk-table" aria-label="Top adoption actions">
+                  <div class="risk-table-head">
+                    <h3>Top Adoption Actions</h3>
+                    <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/">View all</a>
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Area</th>
+                        <th>Risk</th>
+                        <th>Next Tool</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>2608 IAM successor app activation</td>
+                        <td>Release readiness</td>
+                        <td><span class="risk high"></span>High</td>
+                        <td><a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/">RASD Workbench</a></td>
+                      </tr>
+                      <tr>
+                        <td>Deprecated API usage in custom logic</td>
+                        <td>Extensibility</td>
+                        <td><span class="risk high"></span>High</td>
+                        <td><a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/extensibility-explorer/">Extensibility Explorer</a></td>
+                      </tr>
+                      <tr>
+                        <td>AI-assisted maintenance notification fit</td>
+                        <td>AI adoption</td>
+                        <td><span class="risk medium"></span>Medium</td>
+                        <td><a href="https://sap-cloud-lab.github.io/sap-maintenance-watch/">Maintenance Watch</a></td>
+                      </tr>
+                      <tr>
+                        <td>Released CDS/API route for finance reporting</td>
+                        <td>Clean core</td>
+                        <td><span class="risk medium"></span>Medium</td>
+                        <td><a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/clean-core-object-navigator/">Object Navigator</a></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </section>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="workflow-rail" aria-labelledby="workflow-title">
+          <h2 id="workflow-title">Suite Workflow</h2>
+          <div class="workflow-step blue">
+            <span><i data-lucide="search"></i></span>
+            <div>
+              <h3>1. Discover</h3>
+              <p>Gain transparency into your extensions, integrations and usage.</p>
+              <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/extensibility-explorer/">Extensibility Explorer <i data-lucide="external-link"></i></a>
+            </div>
+          </div>
+          <div class="workflow-step teal">
+            <span><i data-lucide="clipboard-list"></i></span>
+            <div>
+              <h3>2. Assess</h3>
+              <p>Assess impact, effort and feasibility with requirements and solution design.</p>
+              <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/">RASD Workbench <i data-lucide="external-link"></i></a>
+            </div>
+          </div>
+          <div class="workflow-step cyan">
+            <span><i data-lucide="calendar-days"></i></span>
+            <div>
+              <h3>3. Prepare</h3>
+              <p>Monitor upcoming changes and plan readiness activities.</p>
+              <a href="https://sap-cloud-lab.github.io/sap-maintenance-watch/">Public Maintenance Watch <i data-lucide="external-link"></i></a>
+            </div>
+          </div>
+          <div class="workflow-step green">
+            <span><i data-lucide="shield-check"></i></span>
+            <div>
+              <h3>4. Govern</h3>
+              <p>Navigate objects and maintain a clean core continuously.</p>
+              <a href="https://sap-cloud-lab.github.io/sap-rasd-workbench/suite/tools/clean-core-object-navigator/">Clean Core Object Navigator <i data-lucide="external-link"></i></a>
             </div>
           </div>
 
-          <div class="metric-grid" aria-label="Extensibility metrics">
-            <article class="metric good"><span>Custom Objects</span><strong>18,542</strong><small>3.2% vs last scan</small></article>
-            <article class="metric danger"><span>At Risk</span><strong>317</strong><small>1.7%</small></article>
-            <article class="metric"><span>Deprecated API Usage</span><strong>248</strong><small>2.4%</small></article>
-            <article class="metric"><span>Modification Points</span><strong>1,102</strong><small>0.8%</small></article>
-            <article class="metric danger"><span>Clean Core Violations</span><strong>152</strong><small>5.1%</small></article>
-          </div>
-
-          <div class="table-wrap">
-            <div class="table-title">
-              <h3>Top Risks</h3>
-              <span>5 visible</span>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Object</th>
-                  <th>Type</th>
-                  <th>Application</th>
-                  <th>Risk Level</th>
-                  <th>Risk Driver</th>
-                  <th>Last Used</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><a href="tools/extensibility-explorer/">ZZ_CUST_PRICING</a></td>
-                  <td>Business Logic</td>
-                  <td>SD</td>
-                  <td><span class="risk high"></span>High</td>
-                  <td>Uses deprecated API</td>
-                  <td>15 days ago</td>
-                  <td><a href="tools/extensibility-explorer/">Analyze</a></td>
-                </tr>
-                <tr>
-                  <td><a href="tools/extensibility-explorer/">YY_SALES_REPORT</a></td>
-                  <td>Key User Ext.</td>
-                  <td>SD</td>
-                  <td><span class="risk high"></span>High</td>
-                  <td>Modification of standard</td>
-                  <td>7 days ago</td>
-                  <td><a href="tools/extensibility-explorer/">Analyze</a></td>
-                </tr>
-                <tr>
-                  <td><a href="tools/extensibility-explorer/">ZZ_CREDIT_CHECK</a></td>
-                  <td>Business Logic</td>
-                  <td>FI</td>
-                  <td><span class="risk medium"></span>Medium</td>
-                  <td>Implicit enhancement</td>
-                  <td>30 days ago</td>
-                  <td><a href="tools/extensibility-explorer/">Analyze</a></td>
-                </tr>
-                <tr>
-                  <td><a href="tools/extensibility-explorer/">YY_BP_ENHANCER</a></td>
-                  <td>UI Extension</td>
-                  <td>BP</td>
-                  <td><span class="risk medium"></span>Medium</td>
-                  <td>UI adaptation</td>
-                  <td>21 days ago</td>
-                  <td><a href="tools/extensibility-explorer/">Analyze</a></td>
-                </tr>
-                <tr>
-                  <td><a href="tools/extensibility-explorer/">ZZ_INV_INT_001</a></td>
-                  <td>Integration</td>
-                  <td>MM</td>
-                  <td><span class="risk low"></span>Low</td>
-                  <td>BAdI implementation</td>
-                  <td>60 days ago</td>
-                  <td><a href="tools/extensibility-explorer/">Analyze</a></td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="table-footer">
-              <span>Showing 1-5 of 248</span>
-              <a href="tools/extensibility-explorer/">View all in Extensibility Explorer <i data-lucide="external-link"></i></a>
-            </div>
-          </div>
-        </section>
+          <a class="task-card" href="https://sap-cloud-lab.github.io/sap-rasd-workbench/">
+            <strong>My Tasks <b>6</b></strong>
+            <span>Open tasks assigned to me</span>
+            <i data-lucide="chevron-right"></i>
+          </a>
+        </aside>
       </section>
-
-      <aside class="right-rail">
-        <section class="rail-card readiness">
-          <div class="rail-card-title">
-            <h2>Release Readiness</h2>
-            <i data-lucide="chevron-down"></i>
-          </div>
-          <a href="tools/maintenance-watch/">2408 (August 2024)</a>
-          <p>Go-live window: Aug 16, 2024 - Aug 18, 2024</p>
-          <div class="status-line"><i data-lucide="check-circle-2"></i> On track</div>
-          <div class="progress-row"><span><i></i></span><strong>68%</strong></div>
-          <div class="tasks-heading">
-            <h3>Tasks (6)</h3>
-            <a href="#tasks">View all</a>
-          </div>
-          <div class="task-list">
-            <div class="task danger"><i data-lucide="circle-alert"></i><span>Review high impact changes</span><small>Due May 24</small></div>
-            <div class="task good"><i data-lucide="check-circle-2"></i><span>Validate custom code</span><small>Completed May 20</small></div>
-            <div class="task warn"><i data-lucide="clock-3"></i><span>Check clean core violations</span><small>Due May 27</small></div>
-            <div class="task open"><i data-lucide="clock-3"></i><span>Update test scope</span><small>Due May 30</small></div>
-            <div class="task open"><i data-lucide="clock-3"></i><span>Confirm RASD items</span><small>Due Jun 2</small></div>
-            <div class="task open"><i data-lucide="clock-3"></i><span>Finalize cutover plan</span><small>Due Jun 5</small></div>
-          </div>
-        </section>
-
-        <section class="rail-card">
-          <h2>Quick Exports</h2>
-          <div class="export-list">
-            <button class="export-item" type="button"><i class="green" data-lucide="file-spreadsheet"></i><span><strong>Custom Code Inventory</strong><small>Excel</small></span><i data-lucide="download"></i></button>
-            <button class="export-item" type="button"><i class="green" data-lucide="file-spreadsheet"></i><span><strong>Extensibility Risk Report</strong><small>Excel</small></span><i data-lucide="download"></i></button>
-            <button class="export-item" type="button"><i class="red" data-lucide="file-text"></i><span><strong>Release Impact Summary</strong><small>PDF</small></span><i data-lucide="download"></i></button>
-            <button class="export-item" type="button"><i class="green" data-lucide="file-spreadsheet"></i><span><strong>Clean Core Violations</strong><small>Excel</small></span><i data-lucide="download"></i></button>
-          </div>
-        </section>
-
-        <section class="rail-card notes">
-          <div class="tasks-heading">
-            <h2>My Notes</h2>
-            <a href="#notes">View all</a>
-          </div>
-          <p>Check pricing enhancements with SD team</p>
-          <small>May 19, 2024 • Extensibility Explorer</small>
-          <div class="sap-core">
-            <i data-lucide="sparkles"></i>
-            <span>SAP Core signals stitched into one consultant workspace.</span>
-          </div>
-        </section>
-      </aside>
     </main>
+
+    <footer class="suite-footer">
+      <div><strong>What's New</strong><span>Release updates for 2608 are now available in Public Maintenance Watch.</span><a href="https://sap-cloud-lab.github.io/sap-maintenance-watch/">View Updates <i data-lucide="external-link"></i></a></div>
+      <nav><a href="#">Cookie Preferences</a><a href="#">Terms of Use</a><a href="#">Privacy</a><span>© 2026 SAP SE</span></nav>
+    </footer>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
