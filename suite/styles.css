@@ -46,7 +46,7 @@ a {
 .suite-topbar {
   height: 66px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 32px;
   padding: 0 36px;
@@ -59,8 +59,6 @@ a {
 
 .brand,
 .top-nav,
-.top-actions,
-.user-block,
 .tool-head,
 .card-metrics,
 .tool-card footer,
@@ -127,60 +125,6 @@ a {
   font-weight: 700;
 }
 
-.top-actions {
-  justify-content: flex-end;
-  gap: 14px;
-}
-
-.icon-only {
-  width: 36px;
-  height: 36px;
-  border: 0;
-  background: transparent;
-  color: #071429;
-  border-radius: 8px;
-  cursor: pointer;
-  position: relative;
-}
-
-.icon-only svg,
-.top-actions svg {
-  width: 20px;
-  height: 20px;
-}
-
-.has-badge span {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  color: #fff;
-  background: var(--blue);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.user-block {
-  gap: 10px;
-  min-width: 160px;
-}
-
-.user-block span {
-  display: grid;
-  text-align: right;
-  line-height: 1.2;
-}
-
-.user-block strong {
-  font-size: 14px;
-}
-
-.user-block small,
 .tool-card p,
 .tool-card footer,
 .workspace-controls,
@@ -190,18 +134,6 @@ a {
 .task-card span,
 .suite-footer {
   color: var(--muted);
-}
-
-.user-block b {
-  width: 35px;
-  height: 35px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: #fff;
-  background: var(--blue);
-  font-size: 13px;
 }
 
 .suite-page {
@@ -425,23 +357,6 @@ a {
   font-size: 13px;
 }
 
-.workspace-controls label {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.workspace-controls select,
-.filter-panel select,
-.filter-box select {
-  min-height: 34px;
-  border: 1px solid #cdd8e4;
-  border-radius: 5px;
-  background: #fff;
-  color: #172033;
-  padding: 0 12px;
-}
-
 .workspace-controls svg,
 .risk-table-head svg,
 .suite-footer svg,
@@ -468,6 +383,40 @@ a {
   box-shadow: none;
 }
 
+.asset-links {
+  display: grid;
+  gap: 10px;
+}
+
+.asset-links .filter-title {
+  margin-bottom: 4px;
+}
+
+.asset-links a {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  color: var(--ink);
+}
+
+.asset-links a:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.asset-links span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.asset-links small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .filter-title {
   display: flex;
   justify-content: space-between;
@@ -476,25 +425,6 @@ a {
   font-size: 13px;
 }
 
-.filter-box label,
-.risk-checks {
-  display: grid;
-  gap: 7px;
-  margin-bottom: 10px;
-  color: #29384a;
-  font-size: 12px;
-}
-
-.risk-checks label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-}
-
-.red-dot,
-.amber-dot,
-.green-dot,
 .risk {
   width: 9px;
   height: 9px;
@@ -502,30 +432,16 @@ a {
   border-radius: 50%;
 }
 
-.red-dot,
 .risk.high {
   background: var(--red);
 }
 
-.amber-dot,
 .risk.medium {
   background: var(--orange);
 }
 
-.green-dot,
 .risk.low {
   background: var(--green);
-}
-
-.filter-box button {
-  width: 100%;
-  min-height: 36px;
-  margin-top: 10px;
-  border: 1px solid var(--blue);
-  border-radius: 5px;
-  background: #fff;
-  color: var(--blue);
-  font-weight: 700;
 }
 
 .preview-content {
@@ -619,33 +535,6 @@ a {
   gap: 5px;
   font-weight: 700;
   font-size: 13px;
-}
-
-.mini-bars {
-  display: grid;
-  gap: 10px;
-  margin: 16px 0;
-}
-
-.mini-bars div {
-  display: grid;
-  grid-template-columns: 112px 1fr 38px;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.mini-bars b {
-  display: block;
-  height: 14px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #f04438 0 34%, #ff8a00 34% 62%, #37a447 62% 100%);
-}
-
-.mini-bars em {
-  color: var(--muted);
-  font-style: normal;
-  text-align: right;
 }
 
 .risk-table {
@@ -768,17 +657,6 @@ td {
   gap: 8px;
 }
 
-.task-card b {
-  min-width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  color: #fff;
-  background: var(--blue);
-}
-
 .task-card span {
   font-size: 13px;
 }
@@ -826,12 +704,6 @@ td {
     height: 42px;
   }
 
-  .top-actions {
-    position: absolute;
-    right: 24px;
-    top: 16px;
-  }
-
   .main-layout {
     grid-template-columns: 1fr;
   }
@@ -861,7 +733,7 @@ td {
   }
 
   .filter-panel {
-    grid-template-columns: minmax(180px, 240px) 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -870,11 +742,6 @@ td {
   .suite-footer {
     padding-left: 18px;
     padding-right: 18px;
-  }
-
-  .top-actions {
-    position: static;
-    justify-content: flex-start;
   }
 
   .brand {
