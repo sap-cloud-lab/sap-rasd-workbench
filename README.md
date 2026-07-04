@@ -28,3 +28,7 @@ Key outputs:
 ## Publishing
 
 GitHub Pages publishes from the `main` branch root.
+
+## Clean Core Advisor Question Logging
+
+The Clean Core Advisor auto-posts submitted questions to `/api/log-question`. GitHub Pages is static, so the live page must call a server-side logger that holds `GITHUB_TOKEN` or `CLEAN_CORE_GITHUB_TOKEN` and creates issues in `sap-cloud-lab/sap-rasd-workbench`. Do not put a GitHub write token in browser JavaScript.

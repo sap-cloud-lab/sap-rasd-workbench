@@ -6,6 +6,7 @@
     history: loadHistory(),
     result: null,
     liveErrors: [],
+    sharedLog: "idle",
     groupBy: "need"
   };
 
@@ -22,6 +23,7 @@
     newPrompt: document.querySelector("#newPrompt"),
     savePrompt: document.querySelector("#savePrompt"),
     logQuestion: document.querySelector("#logQuestion"),
+    sharedLogStatus: document.querySelector("#sharedLogStatus"),
     clearHistory: document.querySelector("#clearHistory"),
     copyAnswer: document.querySelector("#copyAnswer"),
     exportAnswer: document.querySelector("#exportAnswer"),
@@ -126,6 +128,7 @@
     els.copyAnswer.disabled = true;
     els.exportAnswer.disabled = true;
     updateSharedLogButton("");
+    updateSharedLogStatus("Questions auto-log when the GitHub logger is configured.", "idle");
     renderHistory();
   }
 
@@ -216,6 +219,7 @@
     if (options.save) saveCurrentQuestion(false);
     renderAll();
     showResult();
+    if (options.save) logQuestionToSharedBacklog(state.result);
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
     if (mode !== "cdsOnly" && requestedTab) selectTab(requestedTab);
   }
@@ -1411,11 +1415,58 @@
     if (options.showToast !== false) showToast("Question saved in this browser.");
   }
 
-  function updateSharedLogButton(question) {
+  function updateSharedLogButton(question, visible = false) {
     if (!els.logQuestion) return;
     const cleanQuestion = clean(question || "");
     els.logQuestion.disabled = !cleanQuestion;
+    els.logQuestion.hidden = !cleanQuestion || !visible;
+    els.logQuestion.textContent = "Open fallback issue";
     els.logQuestion.dataset.issueUrl = cleanQuestion ? buildSharedIssueUrl(cleanQuestion) : "";
+  }
+
+  function updateSharedLogStatus(message, status = "idle") {
+    state.sharedLog = status;
+    if (!els.sharedLogStatus) return;
+    els.sharedLogStatus.textContent = message;
+    els.sharedLogStatus.dataset.state = status;
+  }
+
+  async function logQuestionToSharedBacklog(result) {
+    if (!result || !result.question) return;
+    updateSharedLogButton(result.question);
+    updateSharedLogStatus("Auto-logging question to shared backlog...", "logging");
+
+    try {
+      const response = await fetch(sharedLoggerEndpoint(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(buildSharedLogPayload(result))
+      });
+      const data = await readJsonResponse(response);
+
+      if (response.status === 404 || response.status === 501 || data.needsConfiguration) {
+        throw new Error("needs-config");
+      }
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+
+      if (data.issueUrl || data.html_url) {
+        els.logQuestion.dataset.issueUrl = data.issueUrl || data.html_url;
+        els.logQuestion.textContent = "Open logged issue";
+        els.logQuestion.hidden = false;
+      }
+      updateSharedLogStatus("Logged to shared GitHub backlog.", "logged");
+    } catch (error) {
+      const needsConfig = error.message === "needs-config";
+      if (els.logQuestion && result.question) els.logQuestion.hidden = false;
+      updateSharedLogStatus(
+        needsConfig ? "Auto-log needs server-side GitHub token." : "Auto-log failed; fallback issue link is ready.",
+        needsConfig ? "needs-config" : "failed"
+      );
+    }
   }
 
   function openSharedQuestionLog() {
@@ -1424,14 +1475,53 @@
       showToast("Enter a requirement first.");
       return;
     }
-    const url = buildSharedIssueUrl(question);
+    const url = els.logQuestion.dataset.issueUrl || buildSharedIssueUrl(question);
     window.open(url, "_blank", "noopener");
-    showToast("Review and submit the GitHub issue to add it to the shared backlog.");
+    showToast(els.logQuestion.textContent.includes("logged") ? "Logged issue opened." : "Fallback issue opened.");
   }
 
-  function buildSharedIssueUrl(question) {
-    const title = `[Clean Core Advisor Question] ${question.slice(0, 80)}`;
-    const body = [
+  function sharedLoggerEndpoint() {
+    const configured = document.querySelector('meta[name="clean-core-log-endpoint"]')?.content || window.CLEAN_CORE_LOG_ENDPOINT;
+    return clean(configured || "/api/log-question");
+  }
+
+  async function readJsonResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return {};
+    try {
+      return await response.json();
+    } catch {
+      return {};
+    }
+  }
+
+  function buildSharedLogPayload(result) {
+    return {
+      title: buildSharedIssueTitle(result.question),
+      body: buildSharedIssueBody(result.question, result),
+      question: result.question,
+      sourceUrl: window.location.href,
+      submittedAt: new Date().toISOString(),
+      mode: result.mode,
+      needs: result.needs.map((need) => ({
+        id: need.id,
+        label: need.label
+      })),
+      recommendation: result.recommendation ? {
+        title: result.recommendation.title,
+        summary: result.recommendation.summary,
+        cleanScore: result.recommendation.cleanScore,
+        primary: result.recommendation.primary ? result.recommendation.primary.label : ""
+      } : null
+    };
+  }
+
+  function buildSharedIssueTitle(question) {
+    return `[Clean Core Advisor Question] ${question.slice(0, 80)}`;
+  }
+
+  function buildSharedIssueBody(question, result = null) {
+    const lines = [
       "Question:",
       "",
       question,
@@ -1440,14 +1530,31 @@
       window.location.href,
       "",
       "Submitted:",
-      new Date().toISOString(),
+      new Date().toISOString()
+    ];
+
+    if (result && result.recommendation) {
+      lines.push(
+        "",
+        "Advisor result:",
+        `- Recommendation: ${result.recommendation.title}`,
+        `- Clean core score: ${result.recommendation.cleanScore}`,
+        `- Mode: ${result.mode}`
+      );
+    }
+
+    lines.push(
       "",
       "Note:",
-      "Generated from the Clean Core Advisor shared backlog button."
-    ].join("\n");
+      "Generated automatically from Clean Core Advisor."
+    );
+    return lines.join("\n");
+  }
+
+  function buildSharedIssueUrl(question) {
     const params = new URLSearchParams({
-      title,
-      body
+      title: buildSharedIssueTitle(question),
+      body: buildSharedIssueBody(question)
     });
     return `https://github.com/sap-cloud-lab/sap-rasd-workbench/issues/new?${params.toString()}`;
   }

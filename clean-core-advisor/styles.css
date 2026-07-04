@@ -264,6 +264,28 @@ svg {
   opacity: 0.55;
 }
 
+.shared-status {
+  margin: 0;
+  color: #49667f;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.shared-status[data-state="logging"] {
+  color: #7a4a00;
+}
+
+.shared-status[data-state="logged"] {
+  color: #0b6b3a;
+  font-weight: 750;
+}
+
+.shared-status[data-state="needs-config"],
+.shared-status[data-state="failed"] {
+  color: #7a4a00;
+  font-weight: 750;
+}
+
 .shared-section a {
   color: #07599e;
   font-size: 12px;
