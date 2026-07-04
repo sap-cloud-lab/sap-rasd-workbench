@@ -1828,6 +1828,9 @@
     if (page === "scope") {
       return scopeCompletionSummary(rows, data);
     }
+    if (page === "aiupdates") {
+      return { total: 0, completed: 0, inProgress: 0, notStarted: 0 };
+    }
     if (page === "testplan") {
       return rows.reduce((acc, item) => {
         const saved = state.testState[item.id] || {};
@@ -1849,8 +1852,17 @@
 
   function scopeCompletionSummary(rows, data = state.data) {
     return rows.reduce((acc, row) => {
-      if (!scopeHasDirectChanges(row, data)) acc.noChange += 1;
-      acc.completed += 1;
+      const progress = reviewProgress(scopeSpecificChanges(get(row, "Scope Item ID"), data));
+      if (!progress.total) {
+        acc.noChange += 1;
+        acc.completed += 1;
+      } else if (progress.remaining === 0) {
+        acc.completed += 1;
+      } else if (progress.reviewed > 0) {
+        acc.inProgress += 1;
+      } else {
+        acc.notStarted += 1;
+      }
       acc.total += 1;
       return acc;
     }, { total: 0, completed: 0, inProgress: 0, notStarted: 0, noChange: 0 });
@@ -2077,7 +2089,7 @@
       deprecated: [["apps", "Apps & catalogs"], ["testplan", "Successor tests"]],
       newfeatures: [["testplan", "Add explore tasks"], ["scope", "Scope context"]],
       publicsector: [["testplan", "Create test pack"], ["newfeatures", "New features"]],
-      aiupdates: [["whatsnew", "Open all 2608 changes"], ["coverage", "Open test coverage"]],
+      aiupdates: [["whatsnew", "Open all 2608 changes"]],
       coverage: [["testplan", "Open Cloud ALM pack"], ["whatsnew", "Review source changes"]],
       testplan: [["overview", "Back to overview"]]
     };
@@ -2119,7 +2131,7 @@
       item("deprecated", "Review deprecated items", "Old objects and successors", "5", "warning"),
       item("newfeatures", "Review new features", "Optional items worth exploring", "6", "green"),
       item("publicsector", "Public sector highlights", `${customerProfile.country} and PSM release items`, "7", "teal"),
-      item("aiupdates", "Review AI updates", "2608 AI What's New", "10", "green"),
+      item("aiupdates", "AI updates", "2608 What's New only", "10", "green"),
       item("coverage", "Build test coverage", "What to run, owner, evidence", "8", "blue"),
       item("testplan", "Build test pack", "Cloud ALM upload workbooks", "9", "blue")
     ];
@@ -4351,15 +4363,15 @@
 
   function aiWhatToNote(row) {
     if (/Deprecated|Deleted/i.test(getType(row))) {
-      return "SAP has marked this AI or intelligent-scenario capability as deprecated or removed. Confirm whether CFA uses the scenario, app, or integration before the 2608 upgrade.";
+      return "SAP has marked this AI or intelligent-scenario capability as deprecated or removed. For CFA this is awareness only unless the scenario, app, or integration was actually enabled or consumed.";
     }
     if (isActionReview(row)) {
-      return "SAP marks this as Action/Review Required. Review the affected app, process, role, or integration and record whether it matters to CFA.";
+      return "SAP flags this release item for customer attention. Since CFA has no deployed AI footprint, keep this as information unless a process owner plans to enable it.";
     }
     if (getAction(row) === "Innovation" || getType(row) === "New") {
-      return "SAP lists this as a new AI capability or innovation. Keep it as 2608 awareness unless an owner wants to try it now.";
+      return "SAP lists this as a new AI capability or innovation in public cloud. Treat it as release awareness, not a CFA test item.";
     }
-    return "SAP lists this as an informational AI-related release item. Read the source link and record whether it affects a used process.";
+    return "SAP lists this as an informational AI-related release item. No CFA test action is expected unless the capability is adopted later.";
   }
 
   function aiSourceLinks(row) {
@@ -4375,38 +4387,30 @@
   function renderAiUpdates() {
     const allRows = aiUpdateRows();
     const rows = sortByReview(applyGlobalFilters(allRows, false));
-    const progress = reviewProgress(rows);
     const usedRows = allRows.filter((row) => aiSourceIncludes(row, "Used scope"));
     const actionRows = allRows.filter((row) => isActionReview(row) || /Deprecated|Deleted/i.test(getType(row)));
     const sourceRows = allRows.filter((row) => whatsNewSourceReferences(row).length);
     pageContent.innerHTML = `
-      <div class="filter-row">
-        <div class="review-summary" aria-label="AI update summary">
-          <span>${rows.length} AI What's New rows</span>
-          <span>${progress.reviewed} reviewed</span>
-          <span>${progress.remaining} still to review</span>
-        </div>
-      </div>
       <section class="ai-updates-layout">
         <div class="coverage-hero-card ai-hero-card">
           <div>
             <p class="system-label">SAP S/4HANA Cloud Public Edition ${escapeHtml(state.data.meta.release || "2608.0")}</p>
             <h3>What's new with AI in the 2608 release</h3>
-            <p>Filtered from the RASD What's New export. This page shows SAP-published AI, Joule, SAP Document AI, agentic AI, AI-assisted, and Intelligent Scenario/ISLM release items.</p>
+            <p>Information-only view filtered from the RASD What's New export. CFA has not deployed these AI capabilities, so this page is for awareness of SAP-published AI, Joule, SAP Document AI, agentic AI, AI-assisted, and Intelligent Scenario/ISLM release items.</p>
           </div>
-          <div class="coverage-flow" aria-label="AI update review flow">
+          <div class="coverage-flow" aria-label="AI update information flow">
             <span>2608 What's New</span>
             <span>AI/Joule signal</span>
             <span>Used or complete scope</span>
             <span>SAP source</span>
-            <span>Review decision</span>
+            <span>Information only</span>
           </div>
         </div>
 
         <div class="coverage-kpis ai-kpis">
           ${coverageKpi("AI What's New rows", allRows.length, "Source-driven rows from the 2608 RASD Complete What's New and personalized views.", "green")}
-          ${coverageKpi("Used scope matches", usedRows.length, "AI-related rows that RASD linked to CFA used scope.", "blue")}
-          ${coverageKpi("Action or deprecation", actionRows.length, "Rows SAP marked Action/Review Required, deprecated, or deleted.", "warning")}
+          ${coverageKpi("Rows near used scope", usedRows.length, "RASD linked the underlying app or process to CFA used scope; this does not mean AI is deployed.", "blue")}
+          ${coverageKpi("SAP flagged rows", actionRows.length, "Rows SAP flagged, deprecated, or deleted in the release notes.", "warning")}
           ${coverageKpi("SAP source links", sourceRows.length, "Rows with a direct SAP What's New URL from the export.", "teal")}
         </div>
 
@@ -4418,14 +4422,14 @@
             <div class="coverage-panel-heading">
               <div>
                 <p class="system-label">How rows are included</p>
-                <h3>Release-note filter, not an adoption plan</h3>
+                <h3>Release-note filter, not a review queue</h3>
               </div>
             </div>
             <ul class="coverage-evidence-list">
               <li>Category or description mentions Artificial Intelligence, SAP Document AI, AI-assisted features, Joule, agentic AI, or generative AI.</li>
               <li>Deprecated Intelligent Scenario / ISLM rows are included because they are SAP machine-learning lifecycle changes.</li>
               <li>Rows are grouped so the same SAP item is not repeated just because it appears in used, activated, and complete views.</li>
-              <li>Use the SAP source link on each card as the authority for screenshots, enablement notes, and exact release wording.</li>
+              <li>Use the SAP source link on each card as the authority for release wording, demos, screenshots, and enablement notes if someone wants to explore later.</li>
             </ul>
           </aside>
         </div>
@@ -4434,23 +4438,21 @@
   }
 
   function aiUpdateCard(row) {
-    const key = reviewKey(row);
     const sourceBuckets = row.aiSourceBuckets?.length ? row.aiSourceBuckets.join(", ") : row.aiSourceBucket || "RASD";
     const localization = getLocalization(row);
     return `
-      <article class="ai-update-card ${reviewRowClass(row)}">
+      <article class="ai-update-card">
         <div class="ai-card-top">
           <div>
             <div class="badges">
-              ${badge(getAction(row), actionTone(row))}
+              ${badge(aiActionLabel(row), actionTone(row))}
               ${badge(getType(row), "teal")}
               ${badge(getCategory(row), "green")}
               ${badge(sourceBuckets, "blue")}
-              ${badge(reviewLabel(effectiveReviewEntry(row).status), reviewTone(effectiveReviewEntry(row).status))}
+              ${badge("Information only", "neutral")}
             </div>
             <h3>${escapeHtml(getTitle(row))}</h3>
           </div>
-          ${reviewSelect(row, true)}
         </div>
         <p>${escapeHtml(get(row, "Description(Description)", "Description"))}</p>
         <div class="ai-detail-grid">
@@ -4462,7 +4464,6 @@
         </div>
         <div class="ai-card-actions">
           ${aiSourceLinks(row)}
-          ${reviewNoteToggle(key, "Owner, decision, pilot scope, or why this is not relevant")}
         </div>
       </article>
     `;
@@ -4476,6 +4477,14 @@
         <p>${escapeHtml(text)}</p>
       </div>
     `;
+  }
+
+  function aiActionLabel(row) {
+    const action = getAction(row);
+    if (/Action\/Review/i.test(action)) return "SAP flagged";
+    if (/Information/i.test(action)) return "SAP info";
+    if (/Innovation/i.test(action)) return "SAP innovation";
+    return action;
   }
 
   function renderCoverageBuilder() {
