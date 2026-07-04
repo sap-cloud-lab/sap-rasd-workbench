@@ -4492,20 +4492,20 @@
     const rows = coverageRows();
     const releaseRows = rows.filter((row) => row.timing === "release");
     const futureRows = rows.filter((row) => row.timing === "future");
-    const fitSummary = coverageFitSummary(rows);
-    const ownerSummary = coverageOwnerSummary(rows);
-    const status = coverageStatusSummary(rows);
-    const sampleRows = sortCoverageRows(releaseRows).slice(0, 14);
+    const automationRows = releaseRows.filter(coverageHasAutomationFit);
+    const fitSummary = coverageFitSummary(automationRows);
+    const ownerSummary = coverageOwnerSummary(automationRows);
+    const status = coverageStatusSummary(automationRows);
+    const sampleRows = sortCoverageRows(automationRows).slice(0, 14);
     pageContent.innerHTML = `
       <div class="filter-row">
         <button class="primary-action" type="button" id="downloadScopeAlmZip">Download reviewed scope ALM ZIP</button>
         <button class="secondary-action" type="button" id="downloadTests">Download single Cloud ALM workbook</button>
         <button class="secondary-action" type="button" id="downloadCoverageOwners">Download owner list</button>
         <div class="review-summary" aria-label="Coverage summary">
-          <span>${releaseRows.length} run before upgrade</span>
+          <span>${automationRows.length} automation candidates</span>
+          <span>${releaseRows.length} release tests</span>
           <span>${futureRows.length} future adoption</span>
-          <span>${status.done} done</span>
-          <span>${status.blocked} blocked</span>
         </div>
       </div>
       <section class="coverage-builder">
@@ -4525,24 +4525,24 @@
         </div>
 
         <div class="coverage-kpis">
-          ${coverageKpi("Run before upgrade", releaseRows.length, "Mandatory, critical, deprecated, role, integration, and targeted process checks.", "blue")}
+          ${coverageKpi("Automation candidates", automationRows.length, "Release checks where automation, replay, or smoke testing may add value.", "blue")}
           ${coverageKpi("SAP automate candidates", fitSummary.sapAutomate || 0, "Check SAP S/4HANA Cloud Test Automation Tool, Process Navigator scripts, or Cloud ALM automated imports first.", "green")}
-          ${coverageKpi("Manual / business checks", fitSummary.manual || 0, "Changed screens, apps, fields, or process behavior where a short walkthrough is enough.", "warning")}
-          ${coverageKpi("Technical checks", (fitSummary.integration || 0) + (fitSummary.extensibility || 0), "API, BTP, communication arrangement, custom CDS, custom logic, and extension validations.", "teal")}
+          ${coverageKpi("API / integration replay", fitSummary.integration || 0, "BTP, communication arrangement, API, job, destination, or interface payload checks.", "teal")}
+          ${coverageKpi("Extension / UI smoke checks", (fitSummary.extensibility || 0) + (fitSummary.role || 0), "Custom object validations plus launch/card checks that can be automated after design decisions.", "warning")}
         </div>
 
         <div class="coverage-main-grid">
           <section class="coverage-panel coverage-wide">
             <div class="coverage-panel-heading">
               <div>
-                <p class="system-label">Test pack preview</p>
-                <h3>Scenario test approach</h3>
+                <p class="system-label">Automation candidates</p>
+                <h3>Automation test cases</h3>
               </div>
-              <span>${sampleRows.length} shown</span>
+              <span>${sampleRows.length} of ${automationRows.length} shown</span>
             </div>
             <div class="coverage-table-wrap">
               <table class="data-table coverage-table">
-                <thead><tr><th>Scenario</th><th>Owner</th><th>Test approach</th><th>What to run</th><th>Evidence</th><th>Resources</th><th>Status</th></tr></thead>
+                <thead><tr><th>Scenario</th><th>Owner</th><th>Automation</th><th>Test approach</th></tr></thead>
                 <tbody>${sampleRows.map(coverageTableRow).join("")}</tbody>
               </table>
             </div>
@@ -4600,7 +4600,7 @@
               <li>Role/catalog evidence for deprecated apps, successor apps, spaces, and pages.</li>
               <li>Payload, response, document number, or message ID for API and integration checks.</li>
               <li>Activation and reconciliation evidence for CDS, custom logic, BTP, and extensibility checks.</li>
-              <li>SAP automate run result, Cloud ALM manual result, or reason why the scenario stayed manual.</li>
+              <li>Automation fit decision: SAP automate, UI smoke, API replay, technical extension check, or manual only, with the reason and SAP source.</li>
             </ul>
           </section>
         </div>
@@ -4646,6 +4646,26 @@
       if (status) return status;
       return left.item.title.localeCompare(right.item.title);
     });
+  }
+
+  function coverageHasAutomationFit(row) {
+    return ["sapAutomate", "integration", "extensibility", "role"].includes(row.fit.key);
+  }
+
+  function coverageAutomationDecision(row) {
+    if (row.fit.key === "sapAutomate") {
+      return { label: "Yes", tone: "green", detail: "SAP automate or Process Navigator script candidate" };
+    }
+    if (row.fit.key === "integration") {
+      return { label: "Yes", tone: "teal", detail: "API, message, job, or integration replay" };
+    }
+    if (row.fit.key === "extensibility") {
+      return { label: "Yes", tone: "teal", detail: "Technical activation, API, job, or output check" };
+    }
+    if (row.fit.key === "role") {
+      return { label: "Partial", tone: "warning", detail: "Automate only a UI launch/card smoke check after IAM decisions" };
+    }
+    return { label: "No", tone: "neutral", detail: "Manual business walkthrough" };
   }
 
   function coverageFit(item, recommendation) {
@@ -5012,6 +5032,8 @@
   function coverageTableRow(row) {
     const item = row.item;
     const automation = row.automation;
+    const automationDecision = coverageAutomationDecision(row);
+    const detailOpen = state.selected.coverageDetailId === item.id;
     const scenarioTitle = coverageScenarioTitle(item);
     const originalTitle = getTitle(item);
     const sourceTitle = originalTitle && originalTitle !== scenarioTitle
@@ -5025,23 +5047,17 @@
           ${sourceTitle}
         </td>
         <td>${escapeHtml(row.owner)}</td>
-        <td>${badge(automation.label, automation.tone)}<span class="row-meta">${escapeHtml(automation.mode)}</span></td>
-        <td>
-          <strong>${escapeHtml(shorten(automation.decision, 120))}</strong>
-          <span class="row-meta">${escapeHtml(shorten(automation.summary, 170))}</span>
-        </td>
-        <td>${escapeHtml(row.evidence)}</td>
-        <td>${coverageResourceLinks(automation.resources, 2)}</td>
-        <td>
-          <select data-test-status="${escapeHtml(item.id)}" aria-label="Status for ${escapeHtml(item.title)}">
-            ${["Not started", "In progress", "Blocked", "Done"].map((status) => `<option ${row.status === status ? "selected" : ""}>${status}</option>`).join("")}
-          </select>
+        <td>${badge(automationDecision.label, automationDecision.tone)}<span class="row-meta">${escapeHtml(automationDecision.detail)}</span></td>
+        <td class="coverage-action-cell">
+          <button class="coverage-approach-button${detailOpen ? " active" : ""}" type="button" data-coverage-detail="${escapeHtml(item.id)}">
+            ${detailOpen ? "Hide approach" : "Test approach"}
+          </button>
         </td>
       </tr>
-      <tr class="coverage-drill-row">
-        <td colspan="7">
-          <details class="coverage-test-guidance source-guidance action-compact">
-            <summary class="source-guidance-summary"><span>Test approach</span></summary>
+      ${detailOpen ? `
+        <tr class="coverage-drill-row">
+          <td colspan="4">
+            <div class="coverage-test-guidance-panel">
             <div class="coverage-drill-grid">
               <div>
                 <span class="system-label">What SAP changed</span>
@@ -5062,9 +5078,10 @@
               </div>
             </div>
             ${coverageSourceLinks(automation.resources, 8)}
-          </details>
-        </td>
-      </tr>
+            </div>
+          </td>
+        </tr>
+      ` : ""}
     `;
   }
 
@@ -6116,6 +6133,14 @@
         state.priority = jump.dataset.jumpPriority;
         priorityFilter.querySelectorAll("button").forEach((item) => item.classList.toggle("active", item.dataset.priority === state.priority));
       }
+      render();
+      return;
+    }
+    const coverageDetail = event.target.closest("[data-coverage-detail]");
+    if (coverageDetail) {
+      const id = coverageDetail.dataset.coverageDetail;
+      state.selected.coverageDetailId = state.selected.coverageDetailId === id ? null : id;
+      coverageDetail.blur();
       render();
       return;
     }
