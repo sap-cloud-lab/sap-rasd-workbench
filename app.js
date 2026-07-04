@@ -6133,7 +6133,7 @@
     }
   });
 
-  stateInput.addEventListener("change", async () => {
+  stateInput?.addEventListener("change", async () => {
     const file = stateInput.files?.[0];
     if (!file) return;
     try {
