@@ -8,7 +8,11 @@
       cleanCore: "https://help.sap.com/docs/abap-cloud/abap-development-tools-user-guide/clean-core",
       extensibility: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/b0f040329e93461d9f843e8bf9f871bf/extensibility",
       customCds: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/custom-cds-views",
-      customCommunication: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/communication-scenarios"
+      customCommunication: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/communication-scenarios",
+      managePurchaseOrdersExtensibility: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/8676e556cca85267e10000000a441470.html",
+      purchaseOrderSaveCheckKba: "https://userapps.support.sap.com/sap/support/knowledge/en/2789232",
+      purchaseOrderFinalCheckKba: "https://userapps.support.sap.com/sap/support/knowledge/en/3076598",
+      purchaseOrderAccountAssignmentCds: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/d3c5fdf24efa43ce8686a8a8e3ed6ce8.html"
     },
     examples: [
       "I need AR ageing by customer and bucket",
@@ -38,7 +42,7 @@
         short: "Key user",
         tone: "good",
         description: "Use public-cloud key user tools such as custom fields, UI adaptation, custom logic, custom CDS views, and custom analytical queries.",
-        signals: ["custom field", "field", "ui adaptation", "custom logic", "custom cds", "analytical query", "extension field", "form template", "email template"],
+        signals: ["custom field", "field", "ui adaptation", "custom logic", "custom cds", "analytical query", "extension field", "form template", "email template", "restrict", "validate", "validation", "block save", "check before save"],
         steps: [
           "Use key user extensibility when the requirement is a field, UI, form, simple logic, or analytical view extension.",
           "Build only on released fields, released CDS views, and supported key user extension points.",
@@ -167,6 +171,15 @@
         routeHint: "standard",
         mustVerify: ["Whether flexible workflow covers the condition and whether custom logic is needed for the rule."],
         nextChecks: ["Use standard flexible workflow first.", "Add key user custom logic only for supported rule derivation gaps."]
+      },
+      {
+        id: "purchase-order-budget-period-check",
+        label: "Purchase order budget period check",
+        terms: ["Check of Purchase Order before Saving", "BD_MMPUR_FINAL_CHECK_PO", "budget period purchase order"],
+        aliases: ["budget period", "purchase order budget period", "po budget period", "restrict purchase order", "restrict creation or change purchase order", "block purchase order", "purchase order fiscal year", "budget period less than fiscal year"],
+        routeHint: "keyUser",
+        mustVerify: ["Confirm the date basis for fiscal year, account-assignment split behavior, whether Budget Period is exposed in the PO save-check BAdI, and the exact error-message text."],
+        nextChecks: ["Use Custom Logic for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO, then test create, change, copy, API-created PO, and multi-account-assignment cases.", "Use Account Assignment in Purchase Order CDS only to inspect/report Budget Period fields; do not use CDS to enforce the save check."]
       },
       {
         id: "stock-transport-order-load",
@@ -360,6 +373,32 @@
       "sales-order-extension": [],
       "external-tax": [],
       "approval-workflow": [],
+      "purchase-order-budget-period-check": [
+        {
+          Name: "BD_MMPUR_FINAL_CHECK_PO",
+          DisplayName: "Final Check before Saving Purchase Order",
+          Type: "EXTENSIBILITY_POINT",
+          APIState: "RELEASED",
+          ReleaseStateKeyUserExtensibility: "Released",
+          Products: "SAP S/4HANA Cloud Public Edition",
+          Description: "Custom Logic BAdI / check hook used to validate purchase orders before save and raise an error message.",
+          ParentDisplayName: "Manage Purchase Orders - App Extensibility",
+          Rank: 2
+        },
+        {
+          Name: "I_PURORDACCOUNTASSIGNMENTAPI01",
+          DisplayName: "Account Assignment in Purchase Order",
+          Type: "CDSVIEW",
+          APIState: "RELEASED",
+          ReleaseStateKeyUserExtensibility: "Released",
+          ReleaseStateDeveloperExtensibility: "Released",
+          Products: "SAP S/4HANA Cloud Public Edition",
+          Description: "Released CDS candidate for purchase order account assignment fields, useful for confirming/reporting Budget Period data. Not the enforcement mechanism.",
+          ParentDisplayName: "Sourcing and Procurement for SAP S/4HANA Cloud Public Edition",
+          Rank: 1,
+          NeedsVerification: true
+        }
+      ],
       "stock-transport-order-load": [
         {
           Name: "sap-s4-CE_STOCKTRANSPORTORDER_0001-v1",

@@ -180,12 +180,13 @@
 
     needs.forEach((need) => {
       const hasLive = Array.from(resultMap.values()).some((candidate) => candidate.needIds.includes(need.id));
-      if (!hasLive || state.liveErrors.length) addSeedResults(need, resultMap);
+      if (need.id === "purchase-order-budget-period-check" || !hasLive || state.liveErrors.length) addSeedResults(need, resultMap);
     });
 
     const candidates = Array.from(resultMap.values())
       .map(enrichCandidate)
-      .filter((candidate) => candidate.type === "CDS View" || candidate.type === "OData API")
+      .filter((candidate) => candidate.type === "CDS View" || candidate.type === "OData API" || candidate.type === "Extensibility Point")
+      .filter((candidate) => isRelevantCandidate(candidate, needs))
       .filter((candidate) => mode !== "cdsOnly" || matchesLookupKind(candidate, question))
       .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
@@ -386,6 +387,22 @@
     return needs.some((need) => need.id === "stock-transport-order-load") || (hasMassSignal && hasWriteSignal && hasBusinessObject);
   }
 
+  function isPurchaseOrderBudgetCheck(prompt, needs) {
+    const text = normalize(prompt);
+    const matchedNeed = needs.some((need) => need.id === "purchase-order-budget-period-check");
+    const mentionsPo = /\b(po|purchase order|purchasing document)\b/.test(text);
+    const mentionsBudgetPeriod = /\bbudget period\b/.test(text);
+    const wantsBlockOrValidation = /\b(restrict|block|prevent|validate|validation|check|error|creation|create|change|save)\b/.test(text);
+    return matchedNeed || (mentionsPo && mentionsBudgetPeriod && wantsBlockOrValidation);
+  }
+
+  function isRelevantCandidate(candidate, needs) {
+    if (needs.some((need) => need.id === "purchase-order-budget-period-check") && candidate.needIds.includes("purchase-order-budget-period-check")) {
+      return candidate.name === "BD_MMPUR_FINAL_CHECK_PO" || candidate.name === "I_PURORDACCOUNTASSIGNMENTAPI01";
+    }
+    return true;
+  }
+
   function scoreRoutes(prompt, needs) {
     const text = normalize(prompt);
     const scores = {};
@@ -412,8 +429,17 @@
     });
 
     if (!Object.values(scores).some((route) => route.score > 0)) {
-      scores.standard.score = 2;
-      scores.standard.evidence.push("No extension trigger found, so start by checking standard capability.");
+      scores.developer.score = 1;
+      scores.developer.evidence.push("No seeded SAP pattern matched, so do not assume standard configuration; verify official extension points and released objects first.");
+    }
+
+    if (isPurchaseOrderBudgetCheck(prompt, needs)) {
+      scores.standard.score = 0;
+      scores.keyUser.score += 12;
+      scores.developer.score += 4;
+      scores.sideBySide.score = Math.max(0, scores.sideBySide.score - 2);
+      scores.keyUser.evidence.push("Purchase-order save validation belongs in SAP Custom Logic when the released PO before-save check exposes the required fields.");
+      scores.developer.evidence.push("Use developer extensibility only if the key-user BAdI cannot access the required Budget Period or fiscal-year derivation.");
     }
 
     if (isMassWriteRequirement(prompt, needs)) {
@@ -433,10 +459,11 @@
     const hasExternal = /external|btp|api|integration|third party|sac|datasphere|replicate|side-by-side|side by side/i.test(prompt);
     const hasCustomFields = /custom field|extend .*field|ui adaptation|form template/i.test(prompt);
     const hasMassWrite = isMassWriteRequirement(prompt, needs);
+    const hasPoBudgetCheck = isPurchaseOrderBudgetCheck(prompt, needs);
     const uncertainNeeds = needs.filter((need) => need.verifyByDefault);
     const gapLike = !hasReleased || candidates.every((candidate) => candidate.verdict !== "available");
 
-    if (hasReleased && !hasMassWrite) {
+    if (hasReleased && !hasMassWrite && !hasPoBudgetCheck) {
       scores.standard.score += 3;
       scores.standard.evidence.push("Released CDS/API candidates were found.");
     }
@@ -462,6 +489,13 @@
     if (gapLike && !hasExternal) {
       scores.developer.score += 2;
       scores.developer.evidence.push("No strong released object match was found, so an in-app custom object/view may be required.");
+    }
+    if (hasPoBudgetCheck) {
+      scores.standard.score = 0;
+      scores.keyUser.score += 8;
+      scores.developer.score += 2;
+      if (!hasExternal) scores.sideBySide.score = 0;
+      scores.keyUser.evidence.push("SAP provides a purchase-order before-save custom-logic pattern; this is not a reporting CDS/API lookup.");
     }
     if (scores.notClean.score > 0) {
       scores.standard.score = Math.max(0, scores.standard.score - 3);
@@ -518,6 +552,9 @@
   }
 
   function buildSummary(primary, coverage, needs) {
+    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+      return "Use in-app Custom Logic for the purchase-order before-save check. Block the save with an error when Budget Period is earlier than the derived fiscal year; do not enforce this only in BTP or with a CDS view.";
+    }
     if (needs.some((need) => need.id === "stock-transport-order-load")) {
       return "For STO mass load/update, use the released Stock Transport Order OData V4 API through a BTP or integration layer. Do not classify this as in-app extensibility.";
     }
@@ -538,6 +575,10 @@
 
   function buildRationale(primary, available, verify, needs) {
     const bullets = [...primary.evidence.slice(0, 3)];
+    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+      bullets.unshift("SAP KBA guidance points to Custom Logic and Check of Purchase Order before Saving for raising an error during PO save.");
+      bullets.unshift("This is a core save-time validation, so the control must run inside S/4HANA Cloud, not only in a side-by-side app.");
+    }
     if (needs.some((need) => need.id === "stock-transport-order-load")) {
       bullets.unshift("STO mass load is a write/integration requirement, so in-app/key-user extensibility is not the right route.");
       bullets.unshift("Use Stock Transport Order (OData V4) / API_STOCKTRANSPORTORDER and communication scenario SAP_COM_0A80.");
@@ -553,6 +594,16 @@
 
   function buildSteps(primary, needs, available, verify) {
     const steps = [...primary.steps];
+    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+      return [
+        "Confirm the fiscal-year basis: document date, posting/consumption date, account-assignment date, or a PSM-specific rule.",
+        "Create an implementation in the Custom Logic app for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO.",
+        "Loop through PO items and account assignments, read Budget Period, derive the fiscal year, and compare the values.",
+        "Raise an error message to block save when Budget Period is earlier than the fiscal year.",
+        "Test create, change, copy, API-created PO, and multi-account-assignment cases.",
+        "Use the Account Assignment in Purchase Order CDS only for field confirmation/reporting; it is not the enforcement point."
+      ];
+    }
     if (needs.some((need) => need.id === "stock-transport-order-load")) {
       return [
         "Use the Stock Transport Order OData V4 API, not the generic Purchase Order API and not key-user extensibility.",
@@ -571,6 +622,15 @@
   }
 
   function buildBtpChecklist(primary, needs, candidates) {
+    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+      return [
+        { label: "Recommendation", value: "Do not use BTP as the only enforcement layer for this control." },
+        { label: "Reason", value: "Users and integrations can create or change purchase orders directly in S/4HANA Cloud, so the save check must run in the core transaction." },
+        { label: "Allowed BTP role", value: "Use BTP only for upstream request capture, exception workflow, monitoring, or analytics around rejected attempts." },
+        { label: "Core enforcement", value: "Implement the blocking rule in Custom Logic using Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO." },
+        { label: "API path", value: "If purchase orders are created through APIs, test that the same in-core validation is triggered for API-created or API-changed POs." }
+      ];
+    }
     const apiCandidates = candidates.filter((candidate) => candidate.type === "OData API");
     const bestApi = apiCandidates[0] || candidates.find((candidate) => candidate.verdict === "available") || candidates[0];
     const scenario = tidyCommunicationScenario(bestApi && bestApi.communicationScenario ? bestApi.communicationScenario : inferCommunicationScenario(needs, bestApi));
@@ -586,6 +646,30 @@
   }
 
   function buildDeveloperChecklist(primary, needs, candidates) {
+    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+      return [
+        {
+          title: "Use Custom Logic first",
+          body: "Implement the PO save validation in the released Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO extension point.",
+          link: seed.officialLinks.purchaseOrderSaveCheckKba
+        },
+        {
+          title: "Developer alternative",
+          body: "Use ABAP Cloud developer extensibility only if the key-user BAdI cannot access the required Budget Period, fiscal-year derivation, or supporting lookup.",
+          link: seed.officialLinks.extensibility
+        },
+        {
+          title: "CDS support only",
+          body: "Use Account Assignment in Purchase Order to inspect or report Budget Period fields. Do not rely on a CDS view to block PO save.",
+          link: seed.officialLinks.purchaseOrderAccountAssignmentCds
+        },
+        {
+          title: "Do not move the control outside core",
+          body: "BTP can orchestrate an upstream request, but the blocking rule must still execute in S/4HANA Cloud to cover direct UI and API changes.",
+          link: seed.officialLinks.cleanCore
+        }
+      ];
+    }
     const releasedCds = candidates.filter((candidate) => candidate.type === "CDS View" && candidate.verdict === "available");
     const verifyCds = candidates.filter((candidate) => candidate.type === "CDS View" && candidate.verdict === "verify");
     const best = releasedCds[0] || verifyCds[0] || candidates[0];
@@ -623,6 +707,10 @@
 
   function buildGuardrails(prompt, primary, candidates) {
     const list = [...seed.guardrails];
+    if (/purchase order|budget period/i.test(prompt)) {
+      list.unshift("For purchase-order save validation, do not give a standard-config answer unless a concrete SAP configuration object covers the rule.");
+      list.unshift("Do not enforce PO Budget Period controls only in BTP; direct S/4HANA Cloud UI/API changes must be blocked in the core save path.");
+    }
     if (primary.id === "notClean") list.unshift("This requirement contains explicit not-clean-core signals. Reframe before implementation.");
     if (!candidates.length) {
       list.unshift("No candidate found yet. Do not build against unreleased internals to close the gap.");
@@ -668,7 +756,8 @@
 
   function addCandidate(resultMap, row, need, source, term, seeded) {
     if (!row || !row.Name) return;
-    const key = `${row.Name}::${row.Type || "UNKNOWN"}`;
+    const normalizedType = normalizeType(row.Type);
+    const key = `${row.Name}::${normalizedType || "UNKNOWN"}`;
     const existing = resultMap.get(key);
 
     if (existing) {
@@ -685,7 +774,7 @@
       raw: row,
       name: clean(row.Name),
       displayName: clean(row.DisplayName || row.ShortText || row.Description || row.Name),
-      type: normalizeType(row.Type),
+      type: normalizedType,
       apiState: clean(row.APIState || ""),
       keyUserRelease: clean(row.ReleaseStateKeyUserExtensibility || ""),
       developerRelease: clean(row.ReleaseStateDeveloperExtensibility || ""),
@@ -776,6 +865,10 @@
       }
       if (id === "bank-balances" && /bank account|bank balance|bank reconciliation|house bank/.test(text)) score += 4;
       if (id === "sales-order-extension" && /sales order|custom field|extension/.test(text)) score += 2;
+      if (id === "purchase-order-budget-period-check") {
+        if (/purchase order|purchasing document|bd_mmpur_final_check_po|before saving|save/.test(text)) score += 5;
+        if (/budget period|account assignment|fiscal year/.test(text)) score += 4;
+      }
     });
 
     return score;
@@ -797,6 +890,7 @@
 
   function routeForCandidate(candidate, verdict) {
     if (candidate.type === "OData API") return "sideBySide";
+    if (candidate.type === "Extensibility Point") return "keyUser";
     if (candidate.type === "CDS View" && verdict === "available") return "standard";
     return "developer";
   }
@@ -826,7 +920,9 @@
         when: "The requirement is covered by standard capability, simple field/UI/form changes, workflow rules, or analytical shaping on released objects.",
         score: (recommendation) => isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : []) ? 0 : Math.max(routeScore(recommendation, "standard"), routeScore(recommendation, "keyUser")),
         summary: (recommendation) => recommendedOptionId(recommendation.primary.id) === "inApp"
-          ? "Best first path because it keeps the solution closest to standard public-cloud capability."
+          ? isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+            ? "Recommended: implement the blocking rule in SAP Custom Logic so it runs during PO save."
+            : "Best first path because it keeps the solution closest to standard public-cloud capability."
           : isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Not recommended for mass create/update/upload. In-app extensibility is not a bulk integration mechanism."
             : "Still check first for simple field, UI, report, or configuration coverage before building more."
@@ -840,6 +936,8 @@
         score: (recommendation) => Math.max(routeScore(recommendation, "developer"), recommendation.primary.id === "keyUser" ? 1 : 0),
         summary: (recommendation) => recommendedOptionId(recommendation.primary.id) === "developer"
           ? "Recommended when released content exists but the consumption shape or logic needs ABAP Cloud extension."
+          : isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+            ? "Alternative only if Custom Logic cannot access the fields or derivation needed for the Budget Period rule."
           : isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Use developer skills for the BTP/integration build, validation, mapping, or wrapper service if needed."
             : "Use only after standard and key-user paths cannot satisfy the requirement cleanly."
@@ -853,6 +951,8 @@
         score: (recommendation) => routeScore(recommendation, "sideBySide"),
         summary: (recommendation) => recommendedOptionId(recommendation.primary.id) === "btp"
           ? "Recommended because the requirement has external integration or side-by-side orchestration signals."
+          : isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+            ? "Not recommended for enforcement. BTP cannot be the only place where a PO save is blocked."
           : isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Recommended for mass load/write scenarios because the upload orchestration should call released APIs from an integration layer."
             : "Useful only when the requirement genuinely crosses the S/4HANA boundary or needs a separate app/integration layer."
@@ -862,6 +962,47 @@
 
   function implementationSections(recommendation) {
     const recommended = recommendedOptionId(recommendation.primary.id);
+    const poBudgetCheck = isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : []);
+    if (poBudgetCheck) {
+      return [
+        {
+          id: "inApp",
+          title: "In-app Custom Logic path",
+          recommended: recommended === "inApp",
+          summary: "Recommended because the rule must block PO save inside S/4HANA Cloud.",
+          steps: [
+            "Use Custom Logic for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO.",
+            "Read Budget Period from the PO item/account assignment data exposed by the BAdI.",
+            "Derive the fiscal year from the agreed date basis.",
+            "Raise an error message when Budget Period is earlier than fiscal year.",
+            "Test create, change, copy, API-created PO, and multi-account-assignment cases."
+          ]
+        },
+        {
+          id: "developer",
+          title: "Developer extensibility alternative",
+          recommended: recommended === "developer",
+          summary: "Use only if key-user Custom Logic cannot access the fields or supporting derivation.",
+          steps: [
+            "Confirm the missing field or lookup gap in the Custom Logic BAdI first.",
+            "Use ABAP Cloud released objects only for any supporting logic.",
+            "Keep the final blocking control in the S/4HANA Cloud save path.",
+            "Do not read unreleased tables or copy standard logic."
+          ]
+        },
+        {
+          id: "btp",
+          title: "BTP side-by-side path",
+          recommended: false,
+          summary: "Not recommended for enforcement; use only for upstream workflow, exception handling, or monitoring.",
+          steps: [
+            "Do not rely on BTP alone to block PO creation or change.",
+            "If a BTP app submits PO changes, call released APIs and verify the in-core save check blocks invalid records.",
+            "Use BTP for request capture, approvals outside SAP, notifications, or analytics only."
+          ]
+        }
+      ];
+    }
     return [
       {
         id: "inApp",
@@ -1237,6 +1378,7 @@
     const value = clean(type).toUpperCase();
     if (value === "CDSVIEW" || value === "CDS VIEWS") return "CDS View";
     if (value === "API" || value.includes("ODATA")) return "OData API";
+    if (value === "EXTENSIBILITY_POINT" || value === "BADI" || value.includes("BUSINESS ADD-IN")) return "Extensibility Point";
     if (!value) return "Object";
     return titleCase(value.toLowerCase());
   }
@@ -1263,10 +1405,11 @@
   function guessRouteHint(text) {
     const normalized = normalize(text);
     if (/external|btp|api|integration|third party/.test(normalized)) return "sideBySide";
+    if (/\b(restrict|block|prevent|validate|validation|check)\b/.test(normalized) && /\b(create|creation|change|save|post|submit|purchase order|sales order|journal|asset|goods movement)\b/.test(normalized)) return "keyUser";
     if (/custom field|ui|form|logic/.test(normalized)) return "keyUser";
     if (/abap|rap|custom service|complex/.test(normalized)) return "developer";
     if (/modify standard|unreleased|direct table|copy standard/.test(normalized)) return "notClean";
-    return "standard";
+    return "developer";
   }
 
   function showToast(message) {
