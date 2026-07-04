@@ -5491,17 +5491,6 @@
     URL.revokeObjectURL(url);
   }
 
-  function exportActionRegister() {
-    const rows = [["Area", "Priority", "Title", "Scope", "Recommendation", "Customer Relevance", "Reviewer Note", "Recommended Action", "Old App ID", "Successor App ID", "Catalogs To Review", "Source"]];
-    targetedTestItems().forEach((item) => {
-      const review = item.reviewKey ? effectiveReviewEntry(item) : null;
-      const recommendation = testRecommendation(item);
-      rows.push([item.type, item.priority, item.title, item.scope, recommendation.label, review ? reviewLabel(review.status) : "", review ? review.note || "" : "", recommendation.action || item.scenario, item.oldAppId || "", item.successorAppId || "", item.catalogs || "", item.source]);
-    });
-    downloadCsv(`rasd-${state.data.meta.release || "release"}-action-register.csv`, rows);
-    showToast("Action register exported");
-  }
-
   function targetedTestItems(scopeId = "", options = {}) {
     const includeFuture = Boolean(options.includeFuture);
     return sortByReview(state.data.derived.tests.filter((item) => {
@@ -6156,8 +6145,6 @@
       stateInput.value = "";
     }
   });
-
-  document.querySelector("#exportRegister").addEventListener("click", exportActionRegister);
 
   migrateReviewState({ sync: false });
   render();
