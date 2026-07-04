@@ -166,11 +166,12 @@ svg {
 
 .sidebar-section {
   display: grid;
+  flex: 0 0 auto;
   gap: 9px;
 }
 
 .sidebar-section.grow {
-  min-height: 0;
+  flex: 0 0 auto;
 }
 
 .section-row {
@@ -282,7 +283,7 @@ svg {
   margin: 0;
   color: #35536f;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 
