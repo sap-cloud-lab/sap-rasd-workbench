@@ -4798,8 +4798,12 @@
             "Capture the role, business catalog/page evidence, app ID F3775, card screenshot, Account Type filter screenshot, and pass/fail outcome."
           ],
           automationPath: [
-            "Automation is optional after the manual IAM decision is complete: launch F3775, assert the Bank Profiles - By Bank Group card exists, and assert Account Type filter is available.",
-            "Do not automate the decision about correct role/catalog/page placement or FCLM_BAM restriction values; that is a Security/IAM review."
+            "Automation fit: UI smoke automate only. Use SAP S/4HANA Cloud Test Automation Tool / Test Your Processes if CFA wants this checked every release.",
+            "Create or record a custom UI automate with a real test business user that has F3775_TRAN assigned and known FCLM_BAM restriction values.",
+            "Automated steps: launch app F3775 Bank Relationship Overview, wait for the overview page, assert the Bank Profiles - By Bank Group card is visible, open the card/filter area, and assert the Account Type filter is available.",
+            "Optional assertion: run the card with a controlled bank group/account type and compare visible results with a prepared expected data set containing only statuses 02, 10, 09, and 28.",
+            "Negative/security variant: run the same automate with a restricted test user and confirm the card respects FCLM_BAM access instead of exposing unauthorized bank accounts.",
+            "Do not automate the decision about correct catalog, role, page placement, or restriction design. Security/IAM still has to decide and approve those manually."
           ],
           evidence: [
             "Before/after screenshot of the Bank Relationship Overview card area.",
@@ -5036,8 +5040,8 @@
       </tr>
       <tr class="coverage-drill-row">
         <td colspan="7">
-          <details>
-            <summary>Test approach</summary>
+          <details class="coverage-test-guidance source-guidance action-compact">
+            <summary class="source-guidance-summary"><span>Test approach</span></summary>
             <div class="coverage-drill-grid">
               <div>
                 <span class="system-label">What SAP changed</span>
@@ -5053,11 +5057,11 @@
                 <p><strong>Why this test exists:</strong> ${escapeHtml(row.recommendation.reason)}</p>
               </div>
               <div>
-                <span class="system-label">Evidence and resources</span>
+                <span class="system-label">Evidence</span>
                 ${coverageList(automation.evidence)}
-                <div class="coverage-resource-list">${coverageResourceLinks(automation.resources, 6)}</div>
               </div>
             </div>
+            ${coverageSourceLinks(automation.resources, 8)}
           </details>
         </td>
       </tr>
@@ -5068,6 +5072,16 @@
     const links = dedupeReferences(resources || []).slice(0, limit);
     if (!links.length) return `<span class="row-meta">No source link loaded</span>`;
     return links.map((resource) => `<a class="mini-link" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">${escapeHtml(resource.label || "SAP source")}</a>`).join("");
+  }
+
+  function coverageSourceLinks(resources, limit) {
+    const links = dedupeReferences(resources || []).slice(0, limit);
+    if (!links.length) return "";
+    return `
+      <div class="source-links coverage-source-links">
+        ${links.map((resource) => `<a href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">${escapeHtml(resource.label || "SAP source")}</a>`).join("")}
+      </div>
+    `;
   }
 
   function exportCoverageOwners() {
