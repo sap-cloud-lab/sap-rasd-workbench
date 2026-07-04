@@ -1999,6 +1999,7 @@
   }
 
   function render() {
+    if (state.page === "testplan") state.page = "scope";
     const page = pages[state.page];
     document.body.dataset.page = state.page;
     viewTitle.textContent = page.title;
@@ -2080,17 +2081,17 @@
   function pageActions() {
     const actions = {
       overview: [],
-      scope: [["whatsnew", "Open linked changes"], ["testplan", "Generate tests"]],
-      scopeReview: [["scope", "Back to scope items"], ["testplan", "Open test pack"]],
+      scope: [["whatsnew", "Open linked changes"]],
+      scopeReview: [["scope", "Back to scope items"]],
       whatsnew: [["apps", "Apps & catalogs"], ["newfeatures", "New features"]],
-      apps: [["deprecated", "Deprecated objects"], ["testplan", "Test access"]],
-      extensibility: [["testplan", "Add to tests"], ["whatsnew", "What changed"]],
-      extReview: [["extensibility", "Back to extensibility"], ["testplan", "Add to tests"]],
-      deprecated: [["apps", "Apps & catalogs"], ["testplan", "Successor tests"]],
-      newfeatures: [["testplan", "Add explore tasks"], ["scope", "Scope context"]],
-      publicsector: [["testplan", "Create test pack"], ["newfeatures", "New features"]],
+      apps: [["deprecated", "Deprecated objects"]],
+      extensibility: [["whatsnew", "What changed"]],
+      extReview: [["extensibility", "Back to extensibility"]],
+      deprecated: [["apps", "Apps & catalogs"]],
+      newfeatures: [["scope", "Scope context"]],
+      publicsector: [["newfeatures", "New features"]],
       aiupdates: [["whatsnew", "Open all 2608 changes"]],
-      coverage: [["testplan", "Open Cloud ALM pack"], ["whatsnew", "Review source changes"]],
+      coverage: [["whatsnew", "Review source changes"]],
       testplan: [["overview", "Back to overview"]]
     };
     const search = state.page === "overview" ? "" : `
@@ -2132,8 +2133,7 @@
       item("newfeatures", "Review new features", "Optional items worth exploring", "6", "green"),
       item("publicsector", "Public sector highlights", `${customerProfile.country} and PSM release items`, "7", "teal"),
       item("aiupdates", "AI updates", "2608 What's New only", "10", "green"),
-      item("coverage", "Build automation coverage", "Automate, manual, owner, evidence", "8", "blue"),
-      item("testplan", "Build test pack", "Cloud ALM upload workbooks", "9", "blue")
+      item("coverage", "Build automation coverage", "Automate, manual, owner, evidence", "8", "blue")
     ];
     return includeHome ? [["overview", "Home", "Choose a review area", "", "0"], ...streams] : streams;
   }
@@ -2247,6 +2247,7 @@
     const filtered = [...applyGlobalFilters(rows, false)].sort((a, b) => Number(get(b, "Degree of Change") || 0) - Number(get(a, "Degree of Change") || 0));
     pageContent.innerHTML = `
       <div class="filter-row">
+        <button class="primary-action" type="button" id="downloadScopeAlmZip">Download reviewed scope ALM ZIP</button>
         ${filterButton("scopeMode", "used", "Used with changes", mode)}
         ${filterButton("scopeMode", "usedNoDetail", "Used - no direct detail", mode)}
         ${filterButton("scopeMode", "activated", "Activated only", mode)}
@@ -4497,9 +4498,9 @@
     const sampleRows = sortCoverageRows(releaseRows).slice(0, 14);
     pageContent.innerHTML = `
       <div class="filter-row">
-        <button class="primary-action" type="button" id="downloadTests">Download Cloud ALM workbook</button>
+        <button class="primary-action" type="button" id="downloadScopeAlmZip">Download reviewed scope ALM ZIP</button>
+        <button class="secondary-action" type="button" id="downloadTests">Download single Cloud ALM workbook</button>
         <button class="secondary-action" type="button" id="downloadCoverageOwners">Download owner list</button>
-        <button class="secondary-action" type="button" data-jump="testplan">Open detailed test plan</button>
         <div class="review-summary" aria-label="Coverage summary">
           <span>${releaseRows.length} run before upgrade</span>
           <span>${futureRows.length} future adoption</span>
@@ -5448,7 +5449,7 @@
     let offset = 0;
     files.forEach((file) => {
       const nameBytes = encoder.encode(file.name);
-      const dataBytes = encoder.encode(file.content);
+      const dataBytes = file.content instanceof Uint8Array ? file.content : encoder.encode(file.content);
       const crc = crc32(dataBytes);
       const local = concatBytes([
         u32(0x04034b50), u16(20), u16(0), u16(0), u16(now.time), u16(now.day), u32(crc), u32(dataBytes.length), u32(dataBytes.length), u16(nameBytes.length), u16(0), nameBytes, dataBytes
@@ -5464,7 +5465,7 @@
     return concatBytes([...localParts, central, end]);
   }
 
-  function downloadXlsx(filename, rows) {
+  function xlsxBytes(filename, rows) {
     const created = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
     const files = [
       { name: "[Content_Types].xml", content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>' },
@@ -5475,7 +5476,11 @@
       { name: "docProps/app.xml", content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>RASD Workbench</Application></Properties>' },
       { name: "docProps/core.xml", content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xmlEscape(filename)}</dc:title><dc:creator>RASD Workbench</dc:creator><cp:lastModifiedBy>RASD Workbench</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${created}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${created}</dcterms:modified></cp:coreProperties>` }
     ];
-    const blob = new Blob([makeZip(files)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    return makeZip(files);
+  }
+
+  function downloadXlsx(filename, rows) {
+    const blob = new Blob([xlsxBytes(filename, rows)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -5536,6 +5541,71 @@
     const rows = cloudAlmTemplateRows(scopeId, { packLabel: scopeId ? `${scopeId} Cloud ALM upload` : "targeted Cloud ALM upload" });
     downloadXlsx(`rasd-${state.data.meta.release || "release"}-${scopeId || "all"}-cloud-alm-upload.xlsx`, rows);
     showToast("Cloud ALM upload workbook downloaded");
+  }
+
+  function safeFilePart(value) {
+    return String(value || "")
+      .replace(/[<>:"/\\|?*\x00-\x1f]/g, "-")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 90) || "scope";
+  }
+
+  function releaseScopeIdsForCloudAlm() {
+    const scopeIds = scopeRowsWithDirectChanges(state.data.usedScopeImpact, state.data)
+      .map((row) => get(row, "Scope Item ID"))
+      .filter(Boolean);
+    return [...new Set(scopeIds)]
+      .filter((scopeId) => targetedTestItems(scopeId, { includeFuture: false }).length);
+  }
+
+  function csvText(rows) {
+    return rows.map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+  }
+
+  function exportScopeCloudAlmZip() {
+    const release = state.data.meta.release || customerProfile.release || "release";
+    const scopeIds = releaseScopeIdsForCloudAlm();
+    const files = [];
+    const manifest = [["Scope Item", "Scope Title", "Workbook", "Included Test Rows"]];
+
+    scopeIds.forEach((scopeId) => {
+      const items = targetedTestItems(scopeId, { includeFuture: false });
+      if (!items.length) return;
+      const scopeRow = scopeRowById(scopeId);
+      const scopeTitle = scopeRow ? get(scopeRow, "Scope Item Title") : scopeId;
+      const workbookName = `${safeFilePart(scopeId)}-${safeFilePart(scopeTitle)}-cloud-alm-upload.xlsx`;
+      const rows = cloudAlmTemplateRows(scopeId, {
+        items,
+        packLabel: `${scopeId} reviewed scope Cloud ALM upload`
+      });
+      files.push({ name: workbookName, content: xlsxBytes(workbookName, rows) });
+      manifest.push([scopeId, scopeTitle, workbookName, items.length]);
+    });
+
+    if (!files.length) {
+      showToast("No relevant release test rows to export");
+      return;
+    }
+
+    files.unshift({
+      name: "manifest.csv",
+      content: csvText(manifest)
+    });
+    files.push({
+      name: "README.txt",
+      content: [
+        `RASD ${release} Cloud ALM scope upload pack`,
+        "",
+        "One XLSX workbook is generated per scope item with at least one included release test row.",
+        "Rows marked not relevant/skipped and future/adoption backlog items are not included in this ZIP.",
+        "GUID columns are intentionally blank/TBA-ready so Cloud ALM can accept the manual-test-case upload structure.",
+        "Upload the workbooks in SAP Cloud ALM Test Preparation, then assign the created test cases to a Cloud ALM Test Plan if you need an execution cycle."
+      ].join("\n")
+    });
+
+    downloadBlob(`rasd-${release}-reviewed-scope-cloud-alm-pack.zip`, new Blob([makeZip(files)], { type: "application/zip" }));
+    showToast(`${files.length - 2} scope Cloud ALM workbooks downloaded`);
   }
 
   function exportScopeTestPack(scopeId) {
@@ -5964,9 +6034,7 @@
     }
     const addTest = event.target.closest("[data-add-test]");
     if (addTest) {
-      showToast("Explore task is already included in the generated test plan");
-      state.page = "testplan";
-      render();
+      showToast("Relevant release rows are included in the Scope Items Cloud ALM ZIP");
       return;
     }
     const exportScope = event.target.closest("[data-export-scope]");
@@ -5975,6 +6043,7 @@
       return;
     }
     if (event.target.id === "downloadTests") exportTests();
+    if (event.target.id === "downloadScopeAlmZip") exportScopeCloudAlmZip();
     if (event.target.id === "downloadCoverageOwners") exportCoverageOwners();
     if (event.target.id === "downloadCloudAlm") exportCloudAlmStaging();
     if (event.target.id === "downloadFutureBacklog") exportFutureBacklog();
