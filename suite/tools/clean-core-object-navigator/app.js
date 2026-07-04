@@ -18,6 +18,7 @@
     promptForm: document.querySelector("#promptForm"),
     promptInput: document.querySelector("#promptInput"),
     askButton: document.querySelector("#askButton"),
+    promptHelp: document.querySelector("#promptHelp"),
     newPrompt: document.querySelector("#newPrompt"),
     savePrompt: document.querySelector("#savePrompt"),
     logQuestion: document.querySelector("#logQuestion"),
@@ -167,6 +168,7 @@
 
     const mode = detectRequestMode(question);
     state.liveErrors = [];
+    if (els.promptHelp) els.promptHelp.open = false;
     els.promptInput.value = "";
     resizePrompt();
     showLoading(question, mode);

@@ -349,7 +349,8 @@ svg {
 
 .utility-link,
 .utility-primary,
-.icon-button {
+.icon-button,
+.prompt-help summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -363,6 +364,62 @@ svg {
 .utility-link {
   padding: 0 11px;
   font-size: 12px;
+}
+
+.prompt-help {
+  position: relative;
+}
+
+.prompt-help summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.prompt-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.prompt-help[open] summary {
+  background: #eaf5ff;
+  color: var(--sap-blue);
+}
+
+.prompt-help-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(340px, calc(100vw - 48px));
+  padding: 14px;
+  border: 1px solid #cbdbea;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 20px 42px rgba(10, 50, 92, 0.16);
+}
+
+.prompt-help-panel h2 {
+  margin: 0 0 8px;
+  color: #123456;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.prompt-help-panel ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.prompt-help-panel li {
+  color: #35536f;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.prompt-help-panel li + li {
+  margin-top: 6px;
 }
 
 .utility-primary {
@@ -425,24 +482,33 @@ svg {
 
 .chat-message {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: 12px;
   margin-bottom: 14px;
 }
 
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--sap-blue);
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
   color: #fff;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+  align-self: start;
 }
 
-.assistant-avatar {
+.user-role {
+  background: var(--sap-blue);
+}
+
+.advisor-role {
   background: linear-gradient(135deg, var(--sap-blue), var(--purple));
 }
 
@@ -473,7 +539,7 @@ svg {
 
 .assistant-row {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 14px;
   align-items: start;
 }
@@ -1110,7 +1176,14 @@ a:focus-visible {
 
   .assistant-row,
   .chat-message {
-    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .role-badge {
+    min-width: 50px;
+    min-height: 26px;
+    padding: 0 9px;
+    font-size: 11px;
   }
 
   .score-ring {

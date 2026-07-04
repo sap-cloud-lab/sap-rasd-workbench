@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clean Core Advisor</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css?v=20260704-score-ring" />
+    <link rel="stylesheet" href="styles.css?v=20260704-role-guide" />
   </head>
   <body>
     <div class="app-shell">
@@ -59,6 +59,19 @@
       <main class="main-stage is-home" id="mainStage">
         <header class="utility-bar">
           <span class="hub-status" id="hubStatus">Ready</span>
+          <details class="prompt-help" id="promptHelp">
+            <summary>Prompt guide</summary>
+            <div class="prompt-help-panel">
+              <h2>How to ask</h2>
+              <ul>
+                <li>Use one SAP object or process per prompt when possible.</li>
+                <li>State the action: report, validate/block, upload, integrate, or find CDS/API.</li>
+                <li>Include fields, trigger point, source/target system, and Public Cloud scope.</li>
+                <li>If you include PR + PO, the answer must split them by object and BAdI.</li>
+                <li>For CDS only, ask: show released CDS/API for the object.</li>
+              </ul>
+            </div>
+          </details>
           <a class="utility-link" href="https://userapps.support.sap.com/sap/support/knowledge/en/2974010" target="_blank" rel="noreferrer">KBA 2974010</a>
           <button class="icon-button" id="copyAnswer" type="button" title="Copy answer" aria-label="Copy answer" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h10v13H8z" /><path d="M6 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1" /></svg>
@@ -77,13 +90,13 @@
 
         <section class="result-view" id="resultView" aria-live="polite" hidden>
           <article class="chat-message user-message">
-            <div class="avatar">AC</div>
+            <div class="role-badge user-role" title="Your submitted requirement">You</div>
             <div class="bubble" id="userBubble"></div>
           </article>
 
           <article class="answer-block">
             <div class="assistant-row">
-              <div class="avatar assistant-avatar">AI</div>
+              <div class="role-badge advisor-role" title="Clean Core Advisor response">Advisor</div>
               <div>
                 <p class="eyebrow" id="answerModeLabel">Recommendation</p>
                 <h1 id="recommendationTitle">Analysing...</h1>
@@ -190,6 +203,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="seed-data.js?v=20260704-sidebar-fit"></script>
-    <script src="app.js?v=20260704-composer-clear"></script>
+    <script src="app.js?v=20260704-role-guide"></script>
   </body>
 </html>
