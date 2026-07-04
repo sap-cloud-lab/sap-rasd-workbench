@@ -167,7 +167,7 @@
 
     const mode = detectRequestMode(question);
     state.liveErrors = [];
-    els.promptInput.value = question;
+    els.promptInput.value = "";
     resizePrompt();
     showLoading(question, mode);
 
