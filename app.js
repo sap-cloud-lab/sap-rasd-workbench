@@ -62,7 +62,7 @@
     newfeatures: { title: "New features explorer", kicker: "Useful opportunities", icon: "7" },
     publicsector: { title: "Public sector highlights", kicker: "Australia and PSM focus", icon: "8" },
     aiupdates: { title: "2608 AI updates", kicker: "What's New", icon: "10" },
-    coverage: { title: "AI test coverage builder", kicker: "RASD to test coverage", icon: "9" },
+    coverage: { title: "SAP test automation coverage", kicker: "RASD to SAP Automate", icon: "9" },
     testplan: { title: "Release test pack", kicker: "Cloud ALM upload", icon: "9" }
   };
 
@@ -2132,7 +2132,7 @@
       item("newfeatures", "Review new features", "Optional items worth exploring", "6", "green"),
       item("publicsector", "Public sector highlights", `${customerProfile.country} and PSM release items`, "7", "teal"),
       item("aiupdates", "AI updates", "2608 What's New only", "10", "green"),
-      item("coverage", "Build test coverage", "What to run, owner, evidence", "8", "blue"),
+      item("coverage", "Build automation coverage", "Automate, manual, owner, evidence", "8", "blue"),
       item("testplan", "Build test pack", "Cloud ALM upload workbooks", "9", "blue")
     ];
     return includeHome ? [["overview", "Home", "Choose a review area", "", "0"], ...streams] : streams;
@@ -4510,23 +4510,23 @@
       <section class="coverage-builder">
         <div class="coverage-hero-card">
           <div>
-            <p class="system-label">Coverage logic</p>
-            <h3>RASD says what changed. This page decides what to test.</h3>
-            <p>It combines customer-used scope, relevance decisions, apps, roles, extensibility, integrations, SAP sources, and Cloud ALM structure into one targeted test-coverage view.</p>
+            <p class="system-label">SAP automation fit</p>
+            <h3>Use SAP automates where they fit. Keep the rest targeted.</h3>
+            <p>This page turns reviewed RASD impacts into a practical automation plan: SAP automate candidate, manual business check, role/catalog check, integration/API check, or extensibility validation.</p>
           </div>
           <div class="coverage-flow" aria-label="Coverage flow">
             <span>RASD impact</span>
-            <span>Customer usage</span>
-            <span>Test fit</span>
-            <span>Cloud ALM pack</span>
+            <span>Automation fit</span>
+            <span>SAP automate or manual</span>
+            <span>Cloud ALM execution</span>
             <span>Evidence</span>
           </div>
         </div>
 
         <div class="coverage-kpis">
           ${coverageKpi("Run before upgrade", releaseRows.length, "Mandatory, critical, deprecated, role, integration, and targeted process checks.", "blue")}
-          ${coverageKpi("SAP automate candidates", fitSummary.sapAutomate || 0, "Standard process checks that should be compared with SAP automates or Process Navigator scripts.", "green")}
-          ${coverageKpi("Manual targeted checks", fitSummary.manual || 0, "Changed screens, apps, fields, or process behavior where a short business walkthrough is enough.", "warning")}
+          ${coverageKpi("SAP automate candidates", fitSummary.sapAutomate || 0, "Check SAP S/4HANA Cloud Test Automation Tool, Process Navigator scripts, or Cloud ALM automated imports first.", "green")}
+          ${coverageKpi("Manual / business checks", fitSummary.manual || 0, "Changed screens, apps, fields, or process behavior where a short walkthrough is enough.", "warning")}
           ${coverageKpi("Technical checks", (fitSummary.integration || 0) + (fitSummary.extensibility || 0), "API, BTP, communication arrangement, custom CDS, custom logic, and extension validations.", "teal")}
         </div>
 
@@ -4535,13 +4535,13 @@
             <div class="coverage-panel-heading">
               <div>
                 <p class="system-label">Test pack preview</p>
-                <h3>Regression tests you should run</h3>
+                <h3>Automation and manual test scenarios</h3>
               </div>
               <span>${sampleRows.length} shown</span>
             </div>
             <div class="coverage-table-wrap">
               <table class="data-table coverage-table">
-                <thead><tr><th>Test</th><th>Owner</th><th>Fit</th><th>Why this exists</th><th>Evidence</th><th>Status</th></tr></thead>
+                <thead><tr><th>Test scenario</th><th>Owner</th><th>Automation / manual</th><th>How to run</th><th>Resources</th><th>Evidence</th><th>Status</th></tr></thead>
                 <tbody>${sampleRows.map(coverageTableRow).join("")}</tbody>
               </table>
             </div>
@@ -4599,7 +4599,7 @@
               <li>Role/catalog evidence for deprecated apps, successor apps, spaces, and pages.</li>
               <li>Payload, response, document number, or message ID for API and integration checks.</li>
               <li>Activation and reconciliation evidence for CDS, custom logic, BTP, and extensibility checks.</li>
-              <li>SAP source link and reviewer decision for every test included or excluded.</li>
+              <li>SAP automate run result, Cloud ALM manual result, or reason why the scenario stayed manual.</li>
             </ul>
           </section>
         </div>
@@ -4617,6 +4617,7 @@
         item,
         recommendation,
         fit,
+        automation: coverageAutomationProfile(item, fit, recommendation),
         owner,
         status: saved.status || "Not started",
         timing: recommendation.level === "optional" ? "future" : "release",
@@ -4689,6 +4690,118 @@
     return "Before/after result and sign-off";
   }
 
+  function coverageAutomationProfile(item, fit, recommendation) {
+    const guidance = sourceBackedGuidance(item);
+    const sapSources = dedupeReferences([
+      ...(guidance?.references || []),
+      ...(item.sourceUrl ? [{ label: "SAP What's New source", url: item.sourceUrl }] : [])
+    ]).slice(0, 4);
+    const resources = (items) => dedupeReferences([...items, ...sapSources]).slice(0, 6);
+    const commonManual = "If no delivered automate exists, keep this as a small Cloud ALM manual test with screenshot, document number, payload, or role evidence.";
+
+    if (fit.key === "sapAutomate") {
+      return {
+        label: "Automation candidate",
+        tone: "green",
+        mode: "Try SAP automate first",
+        summary: "Search SAP S/4HANA Cloud Test Automation Tool, Process Navigator, and Cloud ALM libraries for the matching standard script before writing manual steps.",
+        automate: [
+          "Open SAP Signavio Process Navigator for the scope item and identify the standard test script or process activity that matches the RASD change.",
+          "Check SAP S/4HANA Cloud Test Automation Tool / Test Your Processes for a pre-delivered automate covering the same business step.",
+          "If available, parameterise the automate with the customer's test data and execute it in the upgraded test tenant.",
+          "Attach the automation execution result in Cloud ALM and add a short note explaining which RASD change it proves."
+        ],
+        fallback: commonManual,
+        resources: resources([
+          { label: "SAP S/4HANA Cloud automation testing", url: "https://pages.community.sap.com/topics/s4hana-cloud/automation-testing" },
+          { label: "SAP Learning - Test Automation Tool", url: "https://learning.sap.com/courses/implementing-sap-s-4hana-cloud-public-edition/using-the-test-automation-tool-for-automated-testing" },
+          { label: "SAP Signavio Process Navigator", url: "https://me.sap.com/processnavigator" },
+          { label: "SAP Help - Import automated test cases into Cloud ALM", url: "https://help.sap.com/docs/cloud-alm/applicationhelp/importing-automated-test-cases" }
+        ])
+      };
+    }
+
+    if (fit.key === "role") {
+      return {
+        label: "Manual role/catalog",
+        tone: "warning",
+        mode: "Manual access proof",
+        summary: "This is usually not worth automating first; prove the old tile, successor app, catalog, role, space, and page behavior with a real business role.",
+        automate: [
+          "Optional automation is limited to a launch/access smoke test after the role/catalog setup is known.",
+          "Do not rely on automation to decide the correct catalog or page placement; that needs launchpad and security review."
+        ],
+        fallback: "Use Cloud ALM manual steps: confirm successor app ID, business catalog, business role, space/page tile, and real user access.",
+        resources: resources([
+          { label: "SAP Help - Create manual test cases in Cloud ALM", url: "https://help.sap.com/docs/cloud-alm/applicationhelp/creating-manual-test-cases" },
+          { label: "SAP Signavio Process Navigator", url: "https://me.sap.com/processnavigator" }
+        ])
+      };
+    }
+
+    if (fit.key === "integration") {
+      return {
+        label: "API/integration automation",
+        tone: "teal",
+        mode: "Automate outside UI",
+        summary: "Automate this as a payload or interface smoke test, not as a screen-clicking automate.",
+        automate: [
+          "Identify the communication arrangement, BTP destination, API, iFlow, job, or connected system that uses the changed object.",
+          "Replay one realistic request or message in the upgraded test tenant and compare the response, monitor status, and business document/result.",
+          "Where possible, run it through existing Postman, CI, Integration Suite, BTP job, or automated interface test tooling.",
+          "Attach request ID, response, message ID, payload reference, and receiving-system proof in Cloud ALM."
+        ],
+        fallback: "If the interface cannot be automated yet, execute one controlled end-to-end message manually and capture logs plus business outcome.",
+        resources: resources([
+          { label: "SAP Cloud ALM overview", url: "https://support.sap.com/en/alm/sap-cloud-alm.html" },
+          { label: "SAP Business Accelerator Hub", url: "https://api.sap.com" },
+          { label: "SAP Help - Import automated test cases into Cloud ALM", url: "https://help.sap.com/docs/cloud-alm/applicationhelp/importing-automated-test-cases" }
+        ])
+      };
+    }
+
+    if (fit.key === "extensibility") {
+      return {
+        label: "Technical validation",
+        tone: "teal",
+        mode: "Activation and reconciliation",
+        summary: "Run activation, syntax, and consuming-output checks for custom CDS, custom logic, APIs, BTP, or side-by-side objects.",
+        automate: [
+          "List the customer extension object, consuming app/report/integration, and SAP object changed by RASD.",
+          "Run activation/syntax checks in the upgraded test tenant.",
+          "Execute the consuming report, API, BTP app, SAC model, or integration with a small realistic dataset.",
+          "Reconcile the output with a standard SAP app or known production result and attach evidence in Cloud ALM."
+        ],
+        fallback: "If no automated technical check exists, keep a manual technical test with activation result, sample input, output reconciliation, and owner sign-off.",
+        resources: resources([
+          { label: "SAP Business Accelerator Hub", url: "https://api.sap.com" },
+          { label: "SAP Help - Create manual test cases in Cloud ALM", url: "https://help.sap.com/docs/cloud-alm/applicationhelp/creating-manual-test-cases" },
+          { label: "SAP Cloud ALM overview", url: "https://support.sap.com/en/alm/sap-cloud-alm.html" }
+        ])
+      };
+    }
+
+    return {
+      label: recommendation.level === "optional" ? "Manual adoption demo" : "Manual business check",
+      tone: recommendation.level === "optional" ? "green" : "warning",
+      mode: recommendation.level === "optional" ? "Demo only if adopted" : "Manual targeted check",
+      summary: recommendation.level === "optional"
+        ? "Do not create upgrade regression automation unless the business chooses to adopt this new capability now."
+        : "Run the changed business step only; do not replay the entire SAP scope item.",
+      automate: [
+        "Use SAP Process Navigator to locate the matching process activity or standard test script if the change belongs to a standard process.",
+        "Only automate it if the activity is repeated, stable, data-driven, and valuable for future releases.",
+        "For one-off field/screen/output checks, a short Cloud ALM manual test is usually cheaper and clearer."
+      ],
+      fallback: commonManual,
+      resources: resources([
+        { label: "SAP Help - Create manual test cases in Cloud ALM", url: "https://help.sap.com/docs/cloud-alm/applicationhelp/creating-manual-test-cases" },
+        { label: "SAP Help - Getting started with Process Navigator", url: "https://help.sap.com/docs/cloud-alm/getting-started-process-navigator/overview" },
+        { label: "SAP Signavio Process Navigator", url: "https://me.sap.com/processnavigator" }
+      ])
+    };
+  }
+
   function coverageFitSummary(rows) {
     return rows.reduce((acc, row) => {
       acc[row.fit.key] = (acc[row.fit.key] || 0) + 1;
@@ -4721,11 +4834,11 @@
 
   function coverageFitCards(summary) {
     const cards = [
-      ["sapAutomate", "SAP automate candidate", "Check SAP automate / Process Navigator before writing manual steps.", "green"],
-      ["manual", "Manual targeted", "Small business walkthrough only for the changed behavior.", "warning"],
-      ["role", "Role/catalog check", "Validate successor app, catalog, space/page, and real business role.", "warning"],
-      ["integration", "Integration/API check", "Run a realistic payload or interface scenario after upgrade.", "teal"],
-      ["extensibility", "Extensibility check", "Activate/reconcile custom CDS, logic, BTP, or side-by-side usage.", "teal"]
+      ["sapAutomate", "SAP automate candidate", "Look for a delivered automate or Process Navigator/Cloud ALM script before creating manual steps.", "green"],
+      ["manual", "Manual business check", "Run only the changed step with a real role and realistic data.", "warning"],
+      ["role", "Role/catalog check", "Manual access proof for successor apps, catalogs, spaces, pages, and real roles.", "warning"],
+      ["integration", "API/integration automation", "Automate via API smoke, payload replay, Integration Suite, or BTP job checks where possible.", "teal"],
+      ["extensibility", "Extensibility validation", "Run activation/syntax/reconciliation checks for CDS, logic, BTP, or side-by-side usage.", "teal"]
     ];
     return cards.map(([key, label, text, tone]) => `
       <article class="${escapeHtml(tone)}">
@@ -4761,15 +4874,17 @@
 
   function coverageTableRow(row) {
     const item = row.item;
+    const automation = row.automation;
     return `
-      <tr>
+      <tr class="coverage-summary-row">
         <td>
           <strong>${escapeHtml(item.title)}</strong>
           <span class="row-meta">${escapeHtml(item.scope || "General")}</span>
         </td>
         <td>${escapeHtml(row.owner)}</td>
-        <td>${badge(row.fit.label, row.fit.tone)}<span class="row-meta">${escapeHtml(row.fit.detail)}</span></td>
-        <td>${escapeHtml(shorten(row.recommendation.reason, 120))}</td>
+        <td>${badge(automation.label, automation.tone)}<span class="row-meta">${escapeHtml(automation.mode)}</span></td>
+        <td>${escapeHtml(shorten(automation.summary, 150))}</td>
+        <td>${coverageResourceLinks(automation.resources, 2)}</td>
         <td>${escapeHtml(row.evidence)}</td>
         <td>
           <select data-test-status="${escapeHtml(item.id)}" aria-label="Status for ${escapeHtml(item.title)}">
@@ -4777,7 +4892,35 @@
           </select>
         </td>
       </tr>
+      <tr class="coverage-drill-row">
+        <td colspan="7">
+          <details>
+            <summary>Drill down: how this scenario can be automated or tested manually</summary>
+            <div class="coverage-drill-grid">
+              <div>
+                <span class="system-label">Automation approach</span>
+                <ul>${automation.automate.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ul>
+              </div>
+              <div>
+                <span class="system-label">Manual fallback / evidence</span>
+                <p>${escapeHtml(automation.fallback)}</p>
+                <p><strong>Why this test exists:</strong> ${escapeHtml(row.recommendation.reason)}</p>
+              </div>
+              <div>
+                <span class="system-label">Resources</span>
+                <div class="coverage-resource-list">${coverageResourceLinks(automation.resources, 6)}</div>
+              </div>
+            </div>
+          </details>
+        </td>
+      </tr>
     `;
+  }
+
+  function coverageResourceLinks(resources, limit) {
+    const links = dedupeReferences(resources || []).slice(0, limit);
+    if (!links.length) return `<span class="row-meta">No source link loaded</span>`;
+    return links.map((resource) => `<a class="mini-link" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">${escapeHtml(resource.label || "SAP source")}</a>`).join("");
   }
 
   function exportCoverageOwners() {

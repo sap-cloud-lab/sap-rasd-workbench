@@ -2902,7 +2902,7 @@ body[data-page="extensibility"] .ext-table-panel {
 }
 
 .coverage-wide {
-  grid-row: span 4;
+  grid-column: 1 / -1;
 }
 
 .coverage-panel-heading {
@@ -2942,6 +2942,16 @@ body[data-page="extensibility"] .ext-table-panel {
   min-width: 260px;
 }
 
+.coverage-table th:nth-child(4),
+.coverage-table td:nth-child(4) {
+  min-width: 260px;
+}
+
+.coverage-table th:nth-child(5),
+.coverage-table td:nth-child(5) {
+  min-width: 190px;
+}
+
 .coverage-table select {
   width: 132px;
   min-height: 32px;
@@ -2949,6 +2959,89 @@ body[data-page="extensibility"] .ext-table-panel {
   border-radius: 6px;
   background: #fff;
   padding: 5px 7px;
+}
+
+.coverage-drill-row td {
+  padding-top: 0;
+  border-top: 0;
+  background: #fbfdff;
+}
+
+.coverage-drill-row details {
+  border: 1px solid #d6e5f5;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.coverage-drill-row summary {
+  cursor: pointer;
+  padding: 9px 12px;
+  color: var(--sap-blue);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.coverage-drill-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(240px, .8fr);
+  gap: 14px;
+  padding: 0 12px 12px;
+}
+
+.coverage-drill-grid ul {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.coverage-drill-grid p {
+  margin: 6px 0 0;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.coverage-resource-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mini-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 26px;
+  margin: 2px 4px 2px 0;
+  padding: 4px 8px;
+  border: 1px solid #b8dcff;
+  border-radius: 999px;
+  background: #f8fbfe;
+  color: var(--sap-blue);
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.mini-link:hover {
+  background: #edf6ff;
+}
+
+.coverage-summary-row .mini-link {
+  display: block;
+  min-height: 0;
+  margin: 0 0 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  line-height: 1.25;
+}
+
+.coverage-summary-row .mini-link:hover {
+  background: transparent;
+  text-decoration: underline;
 }
 
 .owner-list,
