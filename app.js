@@ -4440,6 +4440,8 @@
   function aiUpdateCard(row) {
     const sourceBuckets = row.aiSourceBuckets?.length ? row.aiSourceBuckets.join(", ") : row.aiSourceBucket || "RASD";
     const localization = getLocalization(row);
+    const detailId = row.reviewKey || rowKey(row);
+    const detailOpen = state.selected.aiDetailId === detailId;
     return `
       <article class="ai-update-card">
         <div class="ai-card-top">
@@ -4455,16 +4457,21 @@
           </div>
         </div>
         <p>${escapeHtml(get(row, "Description(Description)", "Description"))}</p>
-        <div class="ai-detail-grid">
-          ${aiDetail("Affected area", aiAreaSummary(row))}
-          ${aiDetail("Scope items", aiScopeSummary(row))}
-          ${aiDetail("Release signal", aiReleaseSignal(row))}
-          ${localization ? aiDetail("Localization", localization) : ""}
-          ${aiDetail("What to note for 2608", aiWhatToNote(row))}
-        </div>
         <div class="ai-card-actions">
+          <button class="ai-detail-toggle" type="button" data-ai-detail="${escapeHtml(detailId)}">
+            ${detailOpen ? "Hide detail" : "Show detail"}
+          </button>
           ${aiSourceLinks(row)}
         </div>
+        ${detailOpen ? `
+          <div class="ai-detail-grid">
+            ${aiDetail("Affected area", aiAreaSummary(row))}
+            ${aiDetail("Scope items", aiScopeSummary(row))}
+            ${aiDetail("Release signal", aiReleaseSignal(row))}
+            ${localization ? aiDetail("Localization", localization) : ""}
+            ${aiDetail("What to note for 2608", aiWhatToNote(row))}
+          </div>
+        ` : ""}
       </article>
     `;
   }
@@ -6141,6 +6148,14 @@
       state.selected.coverageDetailId = state.selected.coverageDetailId === id ? null : id;
       coverageDetail.blur();
       render();
+      return;
+    }
+    const aiDetail = event.target.closest("[data-ai-detail]");
+    if (aiDetail) {
+      const id = aiDetail.dataset.aiDetail;
+      state.selected.aiDetailId = state.selected.aiDetailId === id ? null : id;
+      aiDetail.blur();
+      renderWithScrollRestore();
       return;
     }
     const nav = event.target.closest(".nav-link");

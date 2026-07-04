@@ -3278,6 +3278,25 @@ body[data-page="extensibility"] .ext-table-panel {
   align-items: center;
 }
 
+.ai-detail-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 5px 13px;
+  border: 1px solid #a8d4fb;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sap-blue);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.ai-detail-toggle:hover {
+  background: #edf6ff;
+}
+
 .ai-card-actions .review-note-toggle {
   flex: 1 1 220px;
 }
