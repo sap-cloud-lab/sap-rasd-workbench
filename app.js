@@ -61,93 +61,19 @@
     deprecated: { title: "Deprecated and successor objects", kicker: "No duplicate chasing", icon: "6" },
     newfeatures: { title: "New features explorer", kicker: "Useful opportunities", icon: "7" },
     publicsector: { title: "Public sector highlights", kicker: "Australia and PSM focus", icon: "8" },
-    aiupdates: { title: "AI updates and adoption signals", kicker: "Suite branch updates", icon: "10" },
+    aiupdates: { title: "2608 AI updates", kicker: "What's New", icon: "10" },
     coverage: { title: "AI test coverage builder", kicker: "RASD to test coverage", icon: "9" },
     testplan: { title: "Release test pack", kicker: "Cloud ALM upload", icon: "9" }
   };
 
-  const aiUpdateItems = [
-    {
-      id: "maintenance-notification-fit",
-      "Title(Title)": "AI-assisted maintenance notification fit",
-      "Description(Description)": "Review AI-assisted maintenance notification triage as an adoption candidate. This is not mandatory 2608 regression testing unless the maintenance process owner wants to pilot it now.",
-      "Action(Action)": "Review",
-      "Type(Type)": "AI adoption signal",
-      "Category(Category)": "Maintenance",
-      "Scope Items(Scope Items)": "4HI, 4HH, 4VT",
-      "AI Area": "Maintenance and operations",
-      "Suite Signal": "The suite branch flagged AI-assisted maintenance notification fit as a top adoption action.",
-      "Why CFA Cares": "Useful if maintenance teams receive high volumes of notifications or alerts and need faster triage. The release risk is adoption governance, not a standard SAP process break.",
-      "How to Validate": "Confirm the current notification triage flow, owner, volume, and pain points. If the owner wants to pilot AI assistance, create a small before/after test with one real notification and capture the expected summary or decision support.",
-      "Next Step": "Open Maintenance Watch, assign the maintenance owner, and move to future adoption unless there is a committed pilot before production upgrade.",
-      "Source Path": "SAP Adoption Intelligence Suite branch - AI Use Cases and Top Adoption Actions",
-      "Tool Page": "maintenance"
-    },
-    {
-      id: "joule-release-adoption",
-      "Title(Title)": "Joule and AI-assisted release adoption candidates",
-      "Description(Description)": "Treat Joule and SAP AI updates as adoption candidates unless SAP marks a change as mandatory or it directly affects an active business process.",
-      "Action(Action)": "Review",
-      "Type(Type)": "AI adoption signal",
-      "Category(Category)": "Joule / SAP AI",
-      "Scope Items(Scope Items)": "",
-      "AI Area": "Cross-application adoption",
-      "Suite Signal": "The suite branch positions Joule and AI-assisted signals inside the same release-readiness rhythm as RASD, not as separate hype items.",
-      "Why CFA Cares": "AI enablement can create useful demos, but it needs process ownership, security review, clean-core routing, and a clear reason to adopt.",
-      "How to Validate": "For each AI feature, confirm the process owner, SAP source, required role or license, data exposure, and whether it helps a used CFA process. Do not add to regression testing unless it changes an existing process.",
-      "Next Step": "Use this page to mark each AI update relevant, not relevant, or adoption backlog; then create Cloud ALM tasks only for committed pilots.",
-      "Source Path": "SAP Adoption Intelligence Suite branch - AI Use Cases",
-      "Tool Page": "newfeatures"
-    },
-    {
-      id: "document-ai-master-data",
-      "Title(Title)": "Document AI and master-data creation scenarios",
-      "Description(Description)": "Document AI and master-data creation ideas need business ownership and clean-core routing before they become a project or test case.",
-      "Action(Action)": "Review",
-      "Type(Type)": "AI adoption signal",
-      "Category(Category)": "Document AI / Master data",
-      "Scope Items(Scope Items)": "1RO, BMD, BNX",
-      "AI Area": "Document processing and master data",
-      "Suite Signal": "The suite branch calls out document AI and master-data creation scenarios as candidates that must be routed through process ownership and clean-core design.",
-      "Why CFA Cares": "These ideas may reduce manual data entry, but they can also touch approvals, integration, authorisation, and master-data governance.",
-      "How to Validate": "Pick one real document or master-data use case, identify the source document, target SAP object, owner, exception handling, audit requirement, and whether released APIs or standard apps can support the process.",
-      "Next Step": "Use Clean Core Object Navigator first; only then decide whether the scenario belongs in BTP, in-app extensibility, or a manual backlog.",
-      "Source Path": "SAP Adoption Intelligence Suite branch - AI Use Cases",
-      "Tool Page": "cleanCore"
-    },
-    {
-      id: "clean-core-route-for-ai",
-      "Title(Title)": "Clean-core route for AI ideas",
-      "Description(Description)": "AI ideas should be converted into released APIs, CDS views, in-app extensibility, or BTP side-by-side routes before build starts.",
-      "Action(Action)": "Review",
-      "Type(Type)": "Clean-core guardrail",
-      "Category(Category)": "Clean Core / BTP",
-      "Scope Items(Scope Items)": "",
-      "AI Area": "Architecture guardrail",
-      "Suite Signal": "The suite branch links AI ideas to Clean Core Object Navigator so ideas become buildable, supportable routes.",
-      "Why CFA Cares": "A useful AI idea can still become a future upgrade risk if it depends on unreleased objects, screen scraping, or unsupported integration routes.",
-      "How to Validate": "For every AI idea, identify the SAP object, required data, write-back path, security model, and whether the target object is released for developer extensibility, integration, or side-by-side use.",
-      "Next Step": "Open Clean Core Object Navigator, document the released API/CDS/BTP route, and block ideas that need unsupported objects.",
-      "Source Path": "SAP Adoption Intelligence Suite branch - Clean Core route",
-      "Tool Page": "cleanCore"
-    },
-    {
-      id: "ai-test-coverage-builder",
-      "Title(Title)": "AI test coverage builder for S/4HANA Cloud",
-      "Description(Description)": "Use RASD impacts to decide which regression tests should run, then generate Cloud ALM workbooks, owners, evidence checklists, and pass/fail tracking.",
-      "Action(Action)": "Review",
-      "Type(Type)": "Test coverage",
-      "Category(Category)": "Cloud ALM",
-      "Scope Items(Scope Items)": "J58, J59, J60, J62",
-      "AI Area": "Release testing",
-      "Suite Signal": "The suite branch frames RASD as the input signal and Cloud ALM as the execution layer for targeted release testing.",
-      "Why CFA Cares": "This avoids asking users to retest 80+ scope items blindly. It separates mandatory release checks from optional adoption and gives owners a clear test pack.",
-      "How to Validate": "Start from reviewed RASD items, compare against Process Navigator or SAP automate availability, keep one test case per scope item or workstream, and export the Cloud ALM workbook with evidence expectations.",
-      "Next Step": "Open Coverage or Test Plan, then download the Cloud ALM workbook for the reviewed release checks.",
-      "Source Path": "SAP Adoption Intelligence Suite branch - AI Test Coverage Builder",
-      "Tool Page": "coverage"
-    }
-  ].map((item) => ({ ...item, reviewKey: `ai:${item.id}` }));
+  const aiWhatsNewFields = [
+    "Title(Title)",
+    "Description(Description)",
+    "Category(Category)",
+    "Solution Area(Solution Area)",
+    "Solution Capability(Solution Capability)"
+  ];
+  const aiWhatsNewPattern = /Artificial Intelligence|SAP Document AI|\bAI[-\s]?(assisted|enhanced|generated|support)\b|\bAI\b|Joule|agentic AI|generative AI|machine learning|Intelligent Scenario|Intelligent Scenarios|ISLM|predictive scenario/i;
 
   const pageContent = document.querySelector("#pageContent");
   const viewTitle = document.querySelector("#viewTitle");
@@ -2151,6 +2077,7 @@
       deprecated: [["apps", "Apps & catalogs"], ["testplan", "Successor tests"]],
       newfeatures: [["testplan", "Add explore tasks"], ["scope", "Scope context"]],
       publicsector: [["testplan", "Create test pack"], ["newfeatures", "New features"]],
+      aiupdates: [["whatsnew", "Open all 2608 changes"], ["coverage", "Open test coverage"]],
       coverage: [["testplan", "Open Cloud ALM pack"], ["whatsnew", "Review source changes"]],
       testplan: [["overview", "Back to overview"]]
     };
@@ -2192,7 +2119,7 @@
       item("deprecated", "Review deprecated items", "Old objects and successors", "5", "warning"),
       item("newfeatures", "Review new features", "Optional items worth exploring", "6", "green"),
       item("publicsector", "Public sector highlights", `${customerProfile.country} and PSM release items`, "7", "teal"),
-      item("aiupdates", "Review AI updates", "Suite branch adoption signals", "10", "green"),
+      item("aiupdates", "Review AI updates", "2608 AI What's New", "10", "green"),
       item("coverage", "Build test coverage", "What to run, owner, evidence", "8", "blue"),
       item("testplan", "Build test pack", "Cloud ALM upload workbooks", "9", "blue")
     ];
@@ -4314,21 +4241,148 @@
     `;
   }
 
-  function aiUpdateRows() {
-    return aiUpdateItems;
+  function isAiWhatsNewRow(row) {
+    const text = aiWhatsNewFields.map((field) => get(row, field)).join(" ");
+    return aiWhatsNewPattern.test(text);
+  }
+
+  function aiUpdateRows(data = state.data) {
+    const sources = [
+      ["used", "Used scope", 0, data.usedPersonalizedWhatsNew],
+      ["activated", "Activated scope", 1, data.activatedPersonalizedWhatsNew],
+      ["complete", "Complete What's New", 2, data.completeWhatsNew]
+    ];
+    const rows = sources.flatMap(([sourceKey, sourceLabel, rank, list]) =>
+      (list || [])
+        .filter(isAiWhatsNewRow)
+        .map((row) => ({
+          ...row,
+          aiSourceKey: sourceKey,
+          aiSourceBucket: sourceLabel,
+          aiSourceRank: rank,
+          reviewKey: `ai-whats-new:${rowKey(row)}`
+        }))
+    );
+    return mergeAiUpdateRows(rows)
+      .map((row) => {
+        const grouped = row.groupedRows?.length ? row.groupedRows : [row];
+        const buckets = uniqueList(grouped.map((item) => item.aiSourceBucket).filter(Boolean));
+        const ranks = grouped.map((item) => Number(item.aiSourceRank)).filter((rank) => Number.isFinite(rank));
+        return {
+          ...row,
+          aiSourceBuckets: buckets,
+          aiSourceBucket: buckets.join(", "),
+          aiSourceRank: ranks.length ? Math.min(...ranks) : 9,
+          reviewKey: `ai-whats-new:${rowKey(row)}`
+        };
+      })
+      .sort(aiWhatsNewSort);
+  }
+
+  function aiDuplicateKey(row) {
+    return [
+      normalizedDuplicateText(getTitle(row)),
+      normalizedDuplicateText(get(row, "Description(Description)", "Description"))
+    ].join("|");
+  }
+
+  function mergeAiUpdateRows(rows) {
+    const merged = new Map();
+    (rows || []).forEach((row) => {
+      const key = aiDuplicateKey(row) || rowKey(row);
+      if (!key) return;
+      const existing = merged.get(key);
+      if (!existing) {
+        merged.set(key, { ...row, groupedRows: [row] });
+        return;
+      }
+      existing.groupedRows.push(row);
+      const scopes = uniqueList([...getScopeItems(existing), ...getScopeItems(row)]);
+      if (scopes.length) existing["Scope Items(Scope Items)"] = scopes.join(",");
+      Object.keys(row).forEach((field) => {
+        if (!existing[field] && row[field]) existing[field] = row[field];
+      });
+    });
+    return [...merged.values()];
+  }
+
+  function aiWhatsNewSort(left, right) {
+    const leftRank = Number(left.aiSourceRank ?? 9);
+    const rightRank = Number(right.aiSourceRank ?? 9);
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    const leftPriority = aiReleasePriority(left);
+    const rightPriority = aiReleasePriority(right);
+    if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+    return getTitle(left).localeCompare(getTitle(right));
+  }
+
+  function aiReleasePriority(row) {
+    if (/Deprecated|Deleted/i.test(getType(row))) return 0;
+    if (isActionReview(row)) return 1;
+    if (getAction(row) === "Innovation" || getType(row) === "New") return 2;
+    return 3;
+  }
+
+  function aiSourceIncludes(row, label) {
+    return (row.aiSourceBuckets || [row.aiSourceBucket]).some((bucket) => bucket === label);
+  }
+
+  function aiAreaSummary(row) {
+    return [
+      get(row, "Line of Business(Line of Business)", "Line of Business"),
+      get(row, "Solution Area(Solution Area)", "Solution Area"),
+      get(row, "Solution Capability(Solution Capability)", "Solution Capability")
+    ].filter(Boolean).join(" / ") || "Cross-application";
+  }
+
+  function aiScopeSummary(row) {
+    const scopes = getScopeItems(row);
+    return scopes.length ? scopes.join(", ") : "No scope item supplied by SAP for this row";
+  }
+
+  function aiReleaseSignal(row) {
+    return [
+      getAction(row) ? `Action: ${getAction(row)}` : "",
+      getType(row) ? `Type: ${getType(row)}` : "",
+      getCategory(row) ? `Category: ${getCategory(row)}` : "",
+      get(row, "Valid as of(Valid as of)") || state.data.meta.release ? `Release: ${get(row, "Valid as of(Valid as of)") || state.data.meta.release}` : ""
+    ].filter(Boolean).join(" | ");
+  }
+
+  function aiWhatToNote(row) {
+    if (/Deprecated|Deleted/i.test(getType(row))) {
+      return "SAP has marked this AI or intelligent-scenario capability as deprecated or removed. Confirm whether CFA uses the scenario, app, or integration before the 2608 upgrade.";
+    }
+    if (isActionReview(row)) {
+      return "SAP marks this as Action/Review Required. Review the affected app, process, role, or integration and record whether it matters to CFA.";
+    }
+    if (getAction(row) === "Innovation" || getType(row) === "New") {
+      return "SAP lists this as a new AI capability or innovation. Keep it as 2608 awareness unless an owner wants to try it now.";
+    }
+    return "SAP lists this as an informational AI-related release item. Read the source link and record whether it affects a used process.";
+  }
+
+  function aiSourceLinks(row) {
+    const references = whatsNewSourceReferences(row, "SAP What's New item");
+    if (!references.length) return `<p class="row-meta">No SAP source URL was supplied in this RASD row.</p>`;
+    return `
+      <div class="source-links">
+        ${references.map((reference) => `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${escapeHtml(reference.label)}</a>`).join("")}
+      </div>
+    `;
   }
 
   function renderAiUpdates() {
-    const rows = sortByReview(applyGlobalFilters(aiUpdateRows(), false));
+    const allRows = aiUpdateRows();
+    const rows = sortByReview(applyGlobalFilters(allRows, false));
     const progress = reviewProgress(rows);
-    const architectureRows = rows.filter((row) => /clean|btp|document|master/i.test([getCategory(row), get(row, "AI Area")].join(" ")));
-    const testingRows = rows.filter((row) => /test|cloud alm|coverage/i.test([getCategory(row), getType(row), getTitle(row)].join(" ")));
+    const usedRows = allRows.filter((row) => aiSourceIncludes(row, "Used scope"));
+    const actionRows = allRows.filter((row) => isActionReview(row) || /Deprecated|Deleted/i.test(getType(row)));
+    const sourceRows = allRows.filter((row) => whatsNewSourceReferences(row).length);
     pageContent.innerHTML = `
       <div class="filter-row">
-        <button class="primary-action" type="button" data-jump="coverage">Open AI test coverage builder</button>
-        <a class="secondary-action" href="suite/" target="_blank" rel="noopener">Open suite branch page</a>
         <div class="review-summary" aria-label="AI update summary">
-          <span>${rows.length} suite updates</span>
+          <span>${rows.length} AI What's New rows</span>
           <span>${progress.reviewed} reviewed</span>
           <span>${progress.remaining} still to review</span>
         </div>
@@ -4336,42 +4390,42 @@
       <section class="ai-updates-layout">
         <div class="coverage-hero-card ai-hero-card">
           <div>
-            <p class="system-label">Embedded from suite branch</p>
-            <h3>AI updates are adoption signals, not another giant test list.</h3>
-            <p>These items came from the SAP Adoption Intelligence Suite branch. Use them to decide whether an AI idea should become a release test, a future-adoption backlog item, or a clean-core design discussion.</p>
+            <p class="system-label">SAP S/4HANA Cloud Public Edition ${escapeHtml(state.data.meta.release || "2608.0")}</p>
+            <h3>What's new with AI in the 2608 release</h3>
+            <p>Filtered from the RASD What's New export. This page shows SAP-published AI, Joule, SAP Document AI, agentic AI, AI-assisted, and Intelligent Scenario/ISLM release items.</p>
           </div>
           <div class="coverage-flow" aria-label="AI update review flow">
-            <span>AI signal</span>
-            <span>Process owner</span>
-            <span>Clean-core route</span>
-            <span>Pilot or backlog</span>
-            <span>Cloud ALM only if committed</span>
+            <span>2608 What's New</span>
+            <span>AI/Joule signal</span>
+            <span>Used or complete scope</span>
+            <span>SAP source</span>
+            <span>Review decision</span>
           </div>
         </div>
 
         <div class="coverage-kpis ai-kpis">
-          ${coverageKpi("AI signals", rows.length, "Suite branch updates embedded into the RASD workbench.", "green")}
-          ${coverageKpi("Architecture checks", architectureRows.length, "Document AI, BTP, released API/CDS, and clean-core routing decisions.", "teal")}
-          ${coverageKpi("Testing link", testingRows.length, "Items that connect directly to Coverage or Cloud ALM test-pack work.", "blue")}
-          ${coverageKpi("Still to review", progress.remaining, "Mark relevant, not relevant, or backlog before taking to stakeholders.", "warning")}
+          ${coverageKpi("AI What's New rows", allRows.length, "Source-driven rows from the 2608 RASD Complete What's New and personalized views.", "green")}
+          ${coverageKpi("Used scope matches", usedRows.length, "AI-related rows that RASD linked to CFA used scope.", "blue")}
+          ${coverageKpi("Action or deprecation", actionRows.length, "Rows SAP marked Action/Review Required, deprecated, or deleted.", "warning")}
+          ${coverageKpi("SAP source links", sourceRows.length, "Rows with a direct SAP What's New URL from the export.", "teal")}
         </div>
 
         <div class="ai-main-grid">
           <section class="ai-update-list">
-            ${rows.map(aiUpdateCard).join("") || empty("No AI updates match the current search.")}
+            ${rows.map(aiUpdateCard).join("") || empty("No 2608 AI What's New rows match the current search.")}
           </section>
           <aside class="coverage-panel ai-side-panel">
             <div class="coverage-panel-heading">
               <div>
-                <p class="system-label">How to use this</p>
-                <h3>Keep the conversation practical</h3>
+                <p class="system-label">How rows are included</p>
+                <h3>Release-note filter, not an adoption plan</h3>
               </div>
             </div>
             <ul class="coverage-evidence-list">
-              <li>Do not add an AI item to regression testing unless it changes an existing used process.</li>
-              <li>For pilots, confirm the process owner, data exposure, target SAP object, and expected outcome.</li>
-              <li>Route build ideas through released APIs, CDS views, in-app extensibility, or BTP side-by-side design.</li>
-              <li>Use Coverage only when the AI update becomes a real release test or Cloud ALM task.</li>
+              <li>Category or description mentions Artificial Intelligence, SAP Document AI, AI-assisted features, Joule, agentic AI, or generative AI.</li>
+              <li>Deprecated Intelligent Scenario / ISLM rows are included because they are SAP machine-learning lifecycle changes.</li>
+              <li>Rows are grouped so the same SAP item is not repeated just because it appears in used, activated, and complete views.</li>
+              <li>Use the SAP source link on each card as the authority for screenshots, enablement notes, and exact release wording.</li>
             </ul>
           </aside>
         </div>
@@ -4381,44 +4435,41 @@
 
   function aiUpdateCard(row) {
     const key = reviewKey(row);
-    const toolPage = get(row, "Tool Page");
-    const toolLabel = {
-      coverage: "Open coverage",
-      newfeatures: "Open new features",
-      cleanCore: "Open clean core navigator",
-      maintenance: "Open suite maintenance"
-    }[toolPage] || "Open next step";
-    const toolAction = toolPage === "cleanCore"
-      ? `<a class="table-action" href="suite/tools/clean-core-object-navigator/" target="_blank" rel="noopener">${escapeHtml(toolLabel)}</a>`
-      : toolPage === "maintenance"
-        ? `<a class="table-action" href="suite/#workspace" target="_blank" rel="noopener">${escapeHtml(toolLabel)}</a>`
-        : `<button class="table-action" type="button" data-jump="${escapeHtml(toolPage || "coverage")}">${escapeHtml(toolLabel)}</button>`;
+    const sourceBuckets = row.aiSourceBuckets?.length ? row.aiSourceBuckets.join(", ") : row.aiSourceBucket || "RASD";
+    const localization = getLocalization(row);
     return `
       <article class="ai-update-card ${reviewRowClass(row)}">
         <div class="ai-card-top">
           <div>
-            <div class="badges">${badge(getAction(row), "warning")}${badge(getType(row), "teal")}${badge(getCategory(row), "green")}${badge(reviewLabel(effectiveReviewEntry(row).status), reviewTone(effectiveReviewEntry(row).status))}</div>
+            <div class="badges">
+              ${badge(getAction(row), actionTone(row))}
+              ${badge(getType(row), "teal")}
+              ${badge(getCategory(row), "green")}
+              ${badge(sourceBuckets, "blue")}
+              ${badge(reviewLabel(effectiveReviewEntry(row).status), reviewTone(effectiveReviewEntry(row).status))}
+            </div>
             <h3>${escapeHtml(getTitle(row))}</h3>
           </div>
           ${reviewSelect(row, true)}
         </div>
         <p>${escapeHtml(get(row, "Description(Description)", "Description"))}</p>
         <div class="ai-detail-grid">
-          ${aiDetail("Suite signal", get(row, "Suite Signal"))}
-          ${aiDetail("Why CFA should care", get(row, "Why CFA Cares"))}
-          ${aiDetail("How to validate", get(row, "How to Validate"))}
-          ${aiDetail("Next step", get(row, "Next Step"))}
+          ${aiDetail("Affected area", aiAreaSummary(row))}
+          ${aiDetail("Scope items", aiScopeSummary(row))}
+          ${aiDetail("Release signal", aiReleaseSignal(row))}
+          ${localization ? aiDetail("Localization", localization) : ""}
+          ${aiDetail("What to note for 2608", aiWhatToNote(row))}
         </div>
         <div class="ai-card-actions">
-          ${toolAction}
+          ${aiSourceLinks(row)}
           ${reviewNoteToggle(key, "Owner, decision, pilot scope, or why this is not relevant")}
         </div>
-        <p class="row-meta">Source: ${escapeHtml(get(row, "Source Path"))}</p>
       </article>
     `;
   }
 
   function aiDetail(label, text) {
+    if (!text) return "";
     return `
       <div class="ai-detail-box">
         <span>${escapeHtml(label)}</span>
