@@ -168,7 +168,7 @@ svg {
 }
 
 .sidebar-section.grow {
-  min-height: 152px;
+  min-height: 0;
 }
 
 .section-row {
@@ -197,6 +197,12 @@ svg {
 .example-list {
   display: grid;
   gap: 5px;
+}
+
+.history-list {
+  max-height: 192px;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .history-item {
@@ -229,10 +235,13 @@ svg {
 }
 
 .shared-log-button {
+  display: flex;
+  align-items: center;
   width: 100%;
   min-height: 34px;
   justify-content: center;
   border: 1px solid #b7d6f5;
+  border-radius: 6px;
   background: #f3f9ff;
   color: #07599e;
   font-size: 13px;
@@ -250,6 +259,19 @@ svg {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.prompt-guide {
+  padding: 9px 10px;
+  border: 1px solid #d6e4f2;
+  background: #f8fbff;
+}
+
+.prompt-guide p {
+  margin: 0;
+  color: #35536f;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .example-list button {

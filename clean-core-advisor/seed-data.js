@@ -12,6 +12,8 @@
       managePurchaseOrdersExtensibility: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/8676e556cca85267e10000000a441470.html",
       purchaseOrderSaveCheckKba: "https://userapps.support.sap.com/sap/support/knowledge/en/2789232",
       purchaseOrderFinalCheckKba: "https://userapps.support.sap.com/sap/support/knowledge/en/3076598",
+      purchaseRequisitionCheckTutorial: "https://developers.sap.com/tutorials/abap-s4hanacloud-procurement-purchasereq-checks..html",
+      purchaseRequisitionChangeKba: "https://userapps.support.sap.com/sap/support/knowledge/en/3498391",
       purchaseOrderAccountAssignmentCds: "https://help.sap.com/docs/SAP_S4HANA_CLOUD/0e602d466b99490187fcbb30d1dc897c/d3c5fdf24efa43ce8686a8a8e3ed6ce8.html"
     },
     examples: [
@@ -176,10 +178,19 @@
         id: "purchase-order-budget-period-check",
         label: "Purchase order budget period check",
         terms: ["Check of Purchase Order before Saving", "BD_MMPUR_FINAL_CHECK_PO", "budget period purchase order"],
-        aliases: ["budget period", "purchase order budget period", "po budget period", "restrict purchase order", "restrict creation or change purchase order", "block purchase order", "purchase order fiscal year", "budget period less than fiscal year"],
+        aliases: ["purchase order budget period", "po budget period", "restrict purchase order", "restrict creation or change purchase order", "block purchase order", "purchase order fiscal year", "po fiscal year", "budget period less than fiscal year"],
         routeHint: "keyUser",
         mustVerify: ["Confirm the date basis for fiscal year, account-assignment split behavior, whether Budget Period is exposed in the PO save-check BAdI, and the exact error-message text."],
         nextChecks: ["Use Custom Logic for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO, then test create, change, copy, API-created PO, and multi-account-assignment cases.", "Use Account Assignment in Purchase Order CDS only to inspect/report Budget Period fields; do not use CDS to enforce the save check."]
+      },
+      {
+        id: "purchase-requisition-budget-period-check",
+        label: "Purchase requisition budget period check",
+        terms: ["Check of Purchase Requisition Item", "MM_PUR_S4_PR_CHECK", "budget period purchase requisition"],
+        aliases: ["purchase requisition budget period", "purchase requisition fiscal year", "pr budget period", "pr fiscal year", "restrict purchase requisition", "restrict creation or change purchase requisition", "block purchase requisition", "block pr", "purchase requisition", "purchase requisitions"],
+        routeHint: "keyUser",
+        mustVerify: ["Confirm whether Budget Period is available in the Purchase Requisition item BAdI context or must be derived from account-assignment data, and confirm the exact fiscal-year basis."],
+        nextChecks: ["Use Check of Purchase Requisition Item / MM_PUR_S4_PR_CHECK for PR item validation.", "Raise an error message in the PR check when Budget Period is earlier than the derived fiscal year."]
       },
       {
         id: "stock-transport-order-load",
@@ -394,6 +405,32 @@
           ReleaseStateDeveloperExtensibility: "Released",
           Products: "SAP S/4HANA Cloud Public Edition",
           Description: "Released CDS candidate for purchase order account assignment fields, useful for confirming/reporting Budget Period data. Not the enforcement mechanism.",
+          ParentDisplayName: "Sourcing and Procurement for SAP S/4HANA Cloud Public Edition",
+          Rank: 1,
+          NeedsVerification: true
+        }
+      ],
+      "purchase-requisition-budget-period-check": [
+        {
+          Name: "MM_PUR_S4_PR_CHECK",
+          DisplayName: "Check of Purchase Requisition Item",
+          Type: "EXTENSIBILITY_POINT",
+          APIState: "RELEASED",
+          ReleaseStateKeyUserExtensibility: "Released",
+          ReleaseStateDeveloperExtensibility: "Released",
+          Products: "SAP S/4HANA Cloud Public Edition",
+          Description: "BAdI used to validate purchase requisition item data and return error messages before the PR item is saved.",
+          ParentDisplayName: "Manage Purchase Requisitions - Professional App Extensibility",
+          Rank: 2
+        },
+        {
+          Name: "I_PURCHASEREQUISITIONITEMAPI01",
+          DisplayName: "Purchase Requisition Item",
+          Type: "CDSVIEW",
+          APIState: "RELEASED",
+          ReleaseStateKeyUserExtensibility: "Released",
+          Products: "SAP S/4HANA Cloud Public Edition",
+          Description: "Released CDS/API candidate for purchase requisition item fields. Use for field confirmation/reporting only, not enforcement.",
           ParentDisplayName: "Sourcing and Procurement for SAP S/4HANA Cloud Public Edition",
           Rank: 1,
           NeedsVerification: true

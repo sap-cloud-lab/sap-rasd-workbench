@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clean Core Advisor</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css?v=20260704-question-log" />
+    <link rel="stylesheet" href="styles.css?v=20260704-mixed-pr-po" />
   </head>
   <body>
     <div class="app-shell">
@@ -35,6 +35,12 @@
           <h2>Shared backlog</h2>
           <button class="shared-log-button" id="logQuestion" type="button" disabled>Log current question</button>
           <a href="https://github.com/sap-cloud-lab/sap-rasd-workbench/issues?q=is%3Aissue%20%22%5BClean%20Core%20Advisor%20Question%5D%22" target="_blank" rel="noreferrer">Open question backlog</a>
+        </section>
+
+        <section class="sidebar-section prompt-guide">
+          <h2>Prompt scope</h2>
+          <p>Best: one SAP object per prompt.</p>
+          <p>If you include PR + PO, the answer must split them and show separate BAdIs.</p>
         </section>
 
         <section class="sidebar-section">
@@ -184,7 +190,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="seed-data.js?v=20260704-question-log"></script>
-    <script src="app.js?v=20260704-question-log"></script>
+    <script src="seed-data.js?v=20260704-mixed-pr-po"></script>
+    <script src="app.js?v=20260704-mixed-pr-po"></script>
   </body>
 </html>

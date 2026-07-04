@@ -186,7 +186,7 @@
 
     needs.forEach((need) => {
       const hasLive = Array.from(resultMap.values()).some((candidate) => candidate.needIds.includes(need.id));
-      if (need.id === "purchase-order-budget-period-check" || !hasLive || state.liveErrors.length) addSeedResults(need, resultMap);
+      if (need.id === "purchase-order-budget-period-check" || need.id === "purchase-requisition-budget-period-check" || !hasLive || state.liveErrors.length) addSeedResults(need, resultMap);
     });
 
     const candidates = Array.from(resultMap.values())
@@ -286,7 +286,11 @@
       return need.aliases.some((alias) => normalized.includes(normalize(alias))) || normalized.includes(normalize(need.label));
     });
 
-    if (matched.length) return matched.map((need) => ({ ...need }));
+    const inferred = [...matched];
+    addInferredNeed(inferred, normalized, "purchase-order-budget-period-check", /\b(po|purchase order|purchasing document)\b/.test(normalized) && /\bbudget period\b/.test(normalized));
+    addInferredNeed(inferred, normalized, "purchase-requisition-budget-period-check", /\b(pr|purchase requisition|purchase requisitions|requisition)\b/.test(normalized) && /\bbudget period\b/.test(normalized));
+
+    if (inferred.length) return inferred.map((need) => ({ ...need }));
 
     return prompt
       .split(/,|;|\band\b|\n/i)
@@ -302,6 +306,12 @@
         mustVerify: ["No seeded pattern exists yet. Validate released objects, fields, authorization, and product fit."],
         nextChecks: ["Search SAP Business Accelerator Hub, then confirm released CDS/API status in View Browser or Help Portal."]
       }));
+  }
+
+  function addInferredNeed(list, normalizedPrompt, needId, shouldAdd) {
+    if (!shouldAdd || list.some((need) => need.id === needId)) return;
+    const need = seed.needs.find((item) => item.id === needId);
+    if (need) list.push(need);
   }
 
   function detectRequestMode(prompt) {
@@ -402,9 +412,29 @@
     return matchedNeed || (mentionsPo && mentionsBudgetPeriod && wantsBlockOrValidation);
   }
 
+  function isPurchaseRequisitionBudgetCheck(prompt, needs) {
+    const text = normalize(prompt);
+    const matchedNeed = needs.some((need) => need.id === "purchase-requisition-budget-period-check");
+    const mentionsPr = /\b(pr|purchase requisition|purchase requisitions|requisition)\b/.test(text);
+    const mentionsBudgetPeriod = /\bbudget period\b/.test(text);
+    const wantsBlockOrValidation = /\b(restrict|block|prevent|validate|validation|check|error|creation|create|change|save|allow)\b/.test(text);
+    return matchedNeed || (mentionsPr && mentionsBudgetPeriod && wantsBlockOrValidation);
+  }
+
+  function isProcurementBudgetValidation(prompt, needs) {
+    return isPurchaseOrderBudgetCheck(prompt, needs) || isPurchaseRequisitionBudgetCheck(prompt, needs);
+  }
+
+  function isMixedProcurementBudgetValidation(prompt, needs) {
+    return isPurchaseOrderBudgetCheck(prompt, needs) && isPurchaseRequisitionBudgetCheck(prompt, needs);
+  }
+
   function isRelevantCandidate(candidate, needs) {
     if (needs.some((need) => need.id === "purchase-order-budget-period-check") && candidate.needIds.includes("purchase-order-budget-period-check")) {
       return candidate.name === "BD_MMPUR_FINAL_CHECK_PO" || candidate.name === "I_PURORDACCOUNTASSIGNMENTAPI01";
+    }
+    if (needs.some((need) => need.id === "purchase-requisition-budget-period-check") && candidate.needIds.includes("purchase-requisition-budget-period-check")) {
+      return candidate.name === "MM_PUR_S4_PR_CHECK" || candidate.name === "I_PURCHASEREQUISITIONITEMAPI01";
     }
     return true;
   }
@@ -439,13 +469,16 @@
       scores.developer.evidence.push("No seeded SAP pattern matched, so do not assume standard configuration; verify official extension points and released objects first.");
     }
 
-    if (isPurchaseOrderBudgetCheck(prompt, needs)) {
+    if (isProcurementBudgetValidation(prompt, needs)) {
       scores.standard.score = 0;
       scores.keyUser.score += 12;
       scores.developer.score += 4;
       scores.sideBySide.score = Math.max(0, scores.sideBySide.score - 2);
-      scores.keyUser.evidence.push("Purchase-order save validation belongs in SAP Custom Logic when the released PO before-save check exposes the required fields.");
+      scores.keyUser.evidence.push("PR/PO budget-period save validation belongs in SAP Custom Logic or released BAdIs for each object.");
       scores.developer.evidence.push("Use developer extensibility only if the key-user BAdI cannot access the required Budget Period or fiscal-year derivation.");
+      if (isMixedProcurementBudgetValidation(prompt, needs)) {
+        scores.keyUser.evidence.push("Multi-object prompt detected: purchase requisition and purchase order need separate checks and separate BAdIs.");
+      }
     }
 
     if (isMassWriteRequirement(prompt, needs)) {
@@ -466,10 +499,12 @@
     const hasCustomFields = /custom field|extend .*field|ui adaptation|form template/i.test(prompt);
     const hasMassWrite = isMassWriteRequirement(prompt, needs);
     const hasPoBudgetCheck = isPurchaseOrderBudgetCheck(prompt, needs);
+    const hasPrBudgetCheck = isPurchaseRequisitionBudgetCheck(prompt, needs);
+    const hasProcurementBudgetCheck = hasPoBudgetCheck || hasPrBudgetCheck;
     const uncertainNeeds = needs.filter((need) => need.verifyByDefault);
     const gapLike = !hasReleased || candidates.every((candidate) => candidate.verdict !== "available");
 
-    if (hasReleased && !hasMassWrite && !hasPoBudgetCheck) {
+    if (hasReleased && !hasMassWrite && !hasProcurementBudgetCheck) {
       scores.standard.score += 3;
       scores.standard.evidence.push("Released CDS/API candidates were found.");
     }
@@ -496,12 +531,12 @@
       scores.developer.score += 2;
       scores.developer.evidence.push("No strong released object match was found, so an in-app custom object/view may be required.");
     }
-    if (hasPoBudgetCheck) {
+    if (hasProcurementBudgetCheck) {
       scores.standard.score = 0;
       scores.keyUser.score += 8;
       scores.developer.score += 2;
       if (!hasExternal) scores.sideBySide.score = 0;
-      scores.keyUser.evidence.push("SAP provides a purchase-order before-save custom-logic pattern; this is not a reporting CDS/API lookup.");
+      scores.keyUser.evidence.push("SAP provides object-specific PR/PO BAdI patterns; this is not a reporting CDS/API lookup.");
     }
     if (scores.notClean.score > 0) {
       scores.standard.score = Math.max(0, scores.standard.score - 3);
@@ -557,8 +592,18 @@
     };
   }
 
+  function hasNeed(needs, id) {
+    return needs.some((need) => need.id === id);
+  }
+
   function buildSummary(primary, coverage, needs) {
-    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+    if (hasNeed(needs, "purchase-order-budget-period-check") && hasNeed(needs, "purchase-requisition-budget-period-check")) {
+      return "Multi-object requirement detected: validate Purchase Requisition and Purchase Order separately. Use MM_PUR_S4_PR_CHECK for PR items and BD_MMPUR_FINAL_CHECK_PO for PO save; do not collapse both objects into one PO-only answer.";
+    }
+    if (hasNeed(needs, "purchase-requisition-budget-period-check")) {
+      return "Use in-app Custom Logic or the released PR BAdI for Check of Purchase Requisition Item / MM_PUR_S4_PR_CHECK. Raise an error when Budget Period is earlier than the derived fiscal year.";
+    }
+    if (hasNeed(needs, "purchase-order-budget-period-check")) {
       return "Use in-app Custom Logic for the purchase-order before-save check. Block the save with an error when Budget Period is earlier than the derived fiscal year; do not enforce this only in BTP or with a CDS view.";
     }
     if (needs.some((need) => need.id === "stock-transport-order-load")) {
@@ -581,7 +626,13 @@
 
   function buildRationale(primary, available, verify, needs) {
     const bullets = [...primary.evidence.slice(0, 3)];
-    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+    if (hasNeed(needs, "purchase-order-budget-period-check") && hasNeed(needs, "purchase-requisition-budget-period-check")) {
+      bullets.unshift("The prompt mentions both Purchase Requisition and Purchase Order; these are different procurement objects and need separate validation hooks.");
+      bullets.unshift("Use MM_PUR_S4_PR_CHECK for PR item checks and BD_MMPUR_FINAL_CHECK_PO for PO save checks.");
+    } else if (hasNeed(needs, "purchase-requisition-budget-period-check")) {
+      bullets.unshift("SAP documents MM_PUR_S4_PR_CHECK as the BAdI definition for checking Purchase Requisition items and returning errors.");
+      bullets.unshift("This is a PR save-time validation, so enforce it in the PR object path rather than only in BTP.");
+    } else if (hasNeed(needs, "purchase-order-budget-period-check")) {
       bullets.unshift("SAP KBA guidance points to Custom Logic and Check of Purchase Order before Saving for raising an error during PO save.");
       bullets.unshift("This is a core save-time validation, so the control must run inside S/4HANA Cloud, not only in a side-by-side app.");
     }
@@ -600,7 +651,27 @@
 
   function buildSteps(primary, needs, available, verify) {
     const steps = [...primary.steps];
-    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+    if (hasNeed(needs, "purchase-order-budget-period-check") && hasNeed(needs, "purchase-requisition-budget-period-check")) {
+      return [
+        "Split the rule by business object: Purchase Requisition item validation and Purchase Order save validation.",
+        "For Purchase Requisition, implement Check of Purchase Requisition Item / MM_PUR_S4_PR_CHECK.",
+        "For Purchase Order, implement Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO.",
+        "Use the same Budget Period versus fiscal-year rule in both checks, but test each object path separately.",
+        "Raise an error message in each BAdI to block create/change when Budget Period is earlier than fiscal year.",
+        "Verify field availability for Budget Period and fiscal-year derivation in each BAdI context before build."
+      ];
+    }
+    if (hasNeed(needs, "purchase-requisition-budget-period-check")) {
+      return [
+        "Confirm the fiscal-year basis for the PR: requested date, delivery date, account-assignment date, or a PSM-specific rule.",
+        "Implement Check of Purchase Requisition Item / MM_PUR_S4_PR_CHECK.",
+        "Loop through PR item data and account assignment if exposed, read or derive Budget Period, and compare against fiscal year.",
+        "Raise an error message to block PR create/change when Budget Period is earlier than fiscal year.",
+        "Test My Purchase Requisitions, Manage Purchase Requisitions - Professional, copied PRs, and follow-on conversion behavior.",
+        "Use PR CDS/API objects only for field confirmation/reporting; they are not the enforcement point."
+      ];
+    }
+    if (hasNeed(needs, "purchase-order-budget-period-check")) {
       return [
         "Confirm the fiscal-year basis: document date, posting/consumption date, account-assignment date, or a PSM-specific rule.",
         "Create an implementation in the Custom Logic app for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO.",
@@ -628,13 +699,14 @@
   }
 
   function buildBtpChecklist(primary, needs, candidates) {
-    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+    if (hasNeed(needs, "purchase-order-budget-period-check") || hasNeed(needs, "purchase-requisition-budget-period-check")) {
       return [
         { label: "Recommendation", value: "Do not use BTP as the only enforcement layer for this control." },
-        { label: "Reason", value: "Users and integrations can create or change purchase orders directly in S/4HANA Cloud, so the save check must run in the core transaction." },
+        { label: "Reason", value: "Users and integrations can create or change PRs/POs directly in S/4HANA Cloud, so the save checks must run in the core object paths." },
         { label: "Allowed BTP role", value: "Use BTP only for upstream request capture, exception workflow, monitoring, or analytics around rejected attempts." },
-        { label: "Core enforcement", value: "Implement the blocking rule in Custom Logic using Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO." },
-        { label: "API path", value: "If purchase orders are created through APIs, test that the same in-core validation is triggered for API-created or API-changed POs." }
+        { label: "PR enforcement", value: hasNeed(needs, "purchase-requisition-budget-period-check") ? "Implement Check of Purchase Requisition Item / MM_PUR_S4_PR_CHECK." : "Not in this prompt." },
+        { label: "PO enforcement", value: hasNeed(needs, "purchase-order-budget-period-check") ? "Implement Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO." : "Not in this prompt." },
+        { label: "API path", value: "If PRs/POs are created through APIs, test that the same in-core validations are triggered for API-created or API-changed documents." }
       ];
     }
     const apiCandidates = candidates.filter((candidate) => candidate.type === "OData API");
@@ -652,12 +724,16 @@
   }
 
   function buildDeveloperChecklist(primary, needs, candidates) {
-    if (needs.some((need) => need.id === "purchase-order-budget-period-check")) {
+    if (hasNeed(needs, "purchase-order-budget-period-check") || hasNeed(needs, "purchase-requisition-budget-period-check")) {
       return [
         {
-          title: "Use Custom Logic first",
-          body: "Implement the PO save validation in the released Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO extension point.",
-          link: seed.officialLinks.purchaseOrderSaveCheckKba
+          title: "Use object-specific BAdIs first",
+          body: hasNeed(needs, "purchase-order-budget-period-check") && hasNeed(needs, "purchase-requisition-budget-period-check")
+            ? "Implement PR validation with MM_PUR_S4_PR_CHECK and PO validation with BD_MMPUR_FINAL_CHECK_PO. Do not use one BAdI for both objects."
+            : hasNeed(needs, "purchase-requisition-budget-period-check")
+              ? "Implement PR item validation with MM_PUR_S4_PR_CHECK."
+              : "Implement PO save validation with BD_MMPUR_FINAL_CHECK_PO.",
+          link: hasNeed(needs, "purchase-requisition-budget-period-check") ? seed.officialLinks.purchaseRequisitionCheckTutorial : seed.officialLinks.purchaseOrderSaveCheckKba
         },
         {
           title: "Developer alternative",
@@ -666,12 +742,12 @@
         },
         {
           title: "CDS support only",
-          body: "Use Account Assignment in Purchase Order to inspect or report Budget Period fields. Do not rely on a CDS view to block PO save.",
-          link: seed.officialLinks.purchaseOrderAccountAssignmentCds
+          body: "Use PR/PO CDS or API objects only to inspect/report fields such as Budget Period. Do not rely on a CDS view to block save.",
+          link: hasNeed(needs, "purchase-order-budget-period-check") ? seed.officialLinks.purchaseOrderAccountAssignmentCds : seed.officialLinks.apiHub
         },
         {
           title: "Do not move the control outside core",
-          body: "BTP can orchestrate an upstream request, but the blocking rule must still execute in S/4HANA Cloud to cover direct UI and API changes.",
+          body: "BTP can orchestrate an upstream request, but the blocking rule must still execute in S/4HANA Cloud to cover direct UI and API changes for each object.",
           link: seed.officialLinks.cleanCore
         }
       ];
@@ -713,9 +789,10 @@
 
   function buildGuardrails(prompt, primary, candidates) {
     const list = [...seed.guardrails];
-    if (/purchase order|budget period/i.test(prompt)) {
-      list.unshift("For purchase-order save validation, do not give a standard-config answer unless a concrete SAP configuration object covers the rule.");
-      list.unshift("Do not enforce PO Budget Period controls only in BTP; direct S/4HANA Cloud UI/API changes must be blocked in the core save path.");
+    if (/purchase order|purchase requisition|budget period/i.test(prompt)) {
+      list.unshift("For PR/PO save validation, do not give a standard-config answer unless a concrete SAP configuration object covers the rule.");
+      list.unshift("Do not enforce PR/PO Budget Period controls only in BTP; direct S/4HANA Cloud UI/API changes must be blocked in the relevant core save path.");
+      if (/purchase order/i.test(prompt) && /purchase requisition/i.test(prompt)) list.unshift("When a prompt mixes PR and PO, split the answer by object and list separate BAdIs for each.");
     }
     if (primary.id === "notClean") list.unshift("This requirement contains explicit not-clean-core signals. Reframe before implementation.");
     if (!candidates.length) {
@@ -875,6 +952,10 @@
         if (/purchase order|purchasing document|bd_mmpur_final_check_po|before saving|save/.test(text)) score += 5;
         if (/budget period|account assignment|fiscal year/.test(text)) score += 4;
       }
+      if (id === "purchase-requisition-budget-period-check") {
+        if (/purchase requisition|requisition item|mm_pur_s4_pr_check|purreq|pr check/.test(text)) score += 5;
+        if (/budget period|account assignment|fiscal year/.test(text)) score += 4;
+      }
     });
 
     return score;
@@ -926,8 +1007,8 @@
         when: "The requirement is covered by standard capability, simple field/UI/form changes, workflow rules, or analytical shaping on released objects.",
         score: (recommendation) => isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : []) ? 0 : Math.max(routeScore(recommendation, "standard"), routeScore(recommendation, "keyUser")),
         summary: (recommendation) => recommendedOptionId(recommendation.primary.id) === "inApp"
-          ? isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
-            ? "Recommended: implement the blocking rule in SAP Custom Logic so it runs during PO save."
+          ? isProcurementBudgetValidation(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+            ? "Recommended: implement the blocking rule in the relevant PR/PO Custom Logic or BAdI save path."
             : "Best first path because it keeps the solution closest to standard public-cloud capability."
           : isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Not recommended for mass create/update/upload. In-app extensibility is not a bulk integration mechanism."
@@ -942,7 +1023,7 @@
         score: (recommendation) => Math.max(routeScore(recommendation, "developer"), recommendation.primary.id === "keyUser" ? 1 : 0),
         summary: (recommendation) => recommendedOptionId(recommendation.primary.id) === "developer"
           ? "Recommended when released content exists but the consumption shape or logic needs ABAP Cloud extension."
-          : isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+          : isProcurementBudgetValidation(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Alternative only if Custom Logic cannot access the fields or derivation needed for the Budget Period rule."
           : isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Use developer skills for the BTP/integration build, validation, mapping, or wrapper service if needed."
@@ -957,8 +1038,8 @@
         score: (recommendation) => routeScore(recommendation, "sideBySide"),
         summary: (recommendation) => recommendedOptionId(recommendation.primary.id) === "btp"
           ? "Recommended because the requirement has external integration or side-by-side orchestration signals."
-          : isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
-            ? "Not recommended for enforcement. BTP cannot be the only place where a PO save is blocked."
+          : isProcurementBudgetValidation(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+            ? "Not recommended for enforcement. BTP cannot be the only place where a PR or PO save is blocked."
           : isMassWriteRequirement(state.result ? state.result.question : "", state.result ? state.result.needs : [])
             ? "Recommended for mass load/write scenarios because the upload orchestration should call released APIs from an integration layer."
             : "Useful only when the requirement genuinely crosses the S/4HANA boundary or needs a separate app/integration layer."
@@ -968,21 +1049,40 @@
 
   function implementationSections(recommendation) {
     const recommended = recommendedOptionId(recommendation.primary.id);
-    const poBudgetCheck = isPurchaseOrderBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : []);
-    if (poBudgetCheck) {
+    const procurementBudgetCheck = isProcurementBudgetValidation(state.result ? state.result.question : "", state.result ? state.result.needs : []);
+    const mixedProcurementBudgetCheck = isMixedProcurementBudgetValidation(state.result ? state.result.question : "", state.result ? state.result.needs : []);
+    if (procurementBudgetCheck) {
       return [
         {
           id: "inApp",
-          title: "In-app Custom Logic path",
+          title: mixedProcurementBudgetCheck ? "In-app Custom Logic paths" : "In-app Custom Logic path",
           recommended: recommended === "inApp",
-          summary: "Recommended because the rule must block PO save inside S/4HANA Cloud.",
-          steps: [
-            "Use Custom Logic for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO.",
-            "Read Budget Period from the PO item/account assignment data exposed by the BAdI.",
-            "Derive the fiscal year from the agreed date basis.",
-            "Raise an error message when Budget Period is earlier than fiscal year.",
-            "Test create, change, copy, API-created PO, and multi-account-assignment cases."
-          ]
+          summary: mixedProcurementBudgetCheck
+            ? "Recommended because PR and PO each need their own save-time validation."
+            : "Recommended because the rule must block save inside S/4HANA Cloud.",
+          steps: mixedProcurementBudgetCheck
+            ? [
+                "Implement PR item validation with MM_PUR_S4_PR_CHECK.",
+                "Implement PO save validation with BD_MMPUR_FINAL_CHECK_PO.",
+                "Apply the same Budget Period versus fiscal-year rule in both implementations.",
+                "Raise an error message in each object path to block create/change.",
+                "Test PR create/change and PO create/change separately, including API-created documents where relevant."
+              ]
+            : isPurchaseRequisitionBudgetCheck(state.result ? state.result.question : "", state.result ? state.result.needs : [])
+              ? [
+                  "Use Check of Purchase Requisition Item / MM_PUR_S4_PR_CHECK.",
+                  "Read or derive Budget Period from the PR item/account-assignment context.",
+                  "Derive the fiscal year from the agreed date basis.",
+                  "Raise an error message when Budget Period is earlier than fiscal year.",
+                  "Test PR create/change in relevant PR apps and API paths."
+                ]
+              : [
+                  "Use Custom Logic for Check of Purchase Order before Saving / BD_MMPUR_FINAL_CHECK_PO.",
+                  "Read Budget Period from the PO item/account assignment data exposed by the BAdI.",
+                  "Derive the fiscal year from the agreed date basis.",
+                  "Raise an error message when Budget Period is earlier than fiscal year.",
+                  "Test create, change, copy, API-created PO, and multi-account-assignment cases."
+                ]
         },
         {
           id: "developer",
@@ -1002,8 +1102,8 @@
           recommended: false,
           summary: "Not recommended for enforcement; use only for upstream workflow, exception handling, or monitoring.",
           steps: [
-            "Do not rely on BTP alone to block PO creation or change.",
-            "If a BTP app submits PO changes, call released APIs and verify the in-core save check blocks invalid records.",
+            "Do not rely on BTP alone to block PR or PO creation/change.",
+            "If a BTP app submits PR/PO changes, call released APIs and verify the in-core save checks block invalid records.",
             "Use BTP for request capture, approvals outside SAP, notifications, or analytics only."
           ]
         }
