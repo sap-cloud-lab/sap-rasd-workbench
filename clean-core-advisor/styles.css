@@ -224,6 +224,34 @@ svg {
   font-size: 12px;
 }
 
+.shared-section {
+  gap: 8px;
+}
+
+.shared-log-button {
+  width: 100%;
+  min-height: 34px;
+  justify-content: center;
+  border: 1px solid #b7d6f5;
+  background: #f3f9ff;
+  color: #07599e;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.shared-log-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.shared-section a {
+  color: #07599e;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .example-list button {
   width: 100%;
   min-height: 36px;

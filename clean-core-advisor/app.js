@@ -20,6 +20,7 @@
     askButton: document.querySelector("#askButton"),
     newPrompt: document.querySelector("#newPrompt"),
     savePrompt: document.querySelector("#savePrompt"),
+    logQuestion: document.querySelector("#logQuestion"),
     clearHistory: document.querySelector("#clearHistory"),
     copyAnswer: document.querySelector("#copyAnswer"),
     exportAnswer: document.querySelector("#exportAnswer"),
@@ -91,6 +92,7 @@
     });
 
     els.savePrompt.addEventListener("click", () => saveCurrentQuestion());
+    els.logQuestion.addEventListener("click", openSharedQuestionLog);
 
     els.clearHistory.addEventListener("click", () => {
       state.history = [];
@@ -122,6 +124,7 @@
     els.hubStatus.textContent = "Ready";
     els.copyAnswer.disabled = true;
     els.exportAnswer.disabled = true;
+    updateSharedLogButton("");
     renderHistory();
   }
 
@@ -132,6 +135,7 @@
     els.resultView.hidden = false;
     els.copyAnswer.disabled = !state.result;
     els.exportAnswer.disabled = !state.result;
+    updateSharedLogButton(state.result ? state.result.question : "");
   }
 
   function selectTab(tabId) {
@@ -168,6 +172,8 @@
     showLoading(question, mode);
 
     const needs = mode === "cdsOnly" ? parseCdsLookupNeeds(question) : parseNeeds(question);
+    if (options.save) saveQuestion(question, { showToast: false });
+    updateSharedLogButton(question);
     const routeScores = scoreRoutes(question, needs);
     const resultMap = new Map();
     const promises = [];
@@ -1286,6 +1292,10 @@
       return;
     }
 
+    saveQuestion(question, { showToast: showSavedToast });
+  }
+
+  function saveQuestion(question, options = {}) {
     const existing = state.history.filter((item) => normalize(item.question) !== normalize(question));
     const entry = {
       id: state.result ? state.result.id : createId(),
@@ -1296,7 +1306,48 @@
     state.history = [entry, ...existing].slice(0, 30);
     saveHistory();
     renderHistory();
-    if (showSavedToast) showToast("Question saved.");
+    if (options.showToast !== false) showToast("Question saved in this browser.");
+  }
+
+  function updateSharedLogButton(question) {
+    if (!els.logQuestion) return;
+    const cleanQuestion = clean(question || "");
+    els.logQuestion.disabled = !cleanQuestion;
+    els.logQuestion.dataset.issueUrl = cleanQuestion ? buildSharedIssueUrl(cleanQuestion) : "";
+  }
+
+  function openSharedQuestionLog() {
+    const question = state.result ? state.result.question : clean(els.promptInput.value);
+    if (!question) {
+      showToast("Enter a requirement first.");
+      return;
+    }
+    const url = buildSharedIssueUrl(question);
+    window.open(url, "_blank", "noopener");
+    showToast("Review and submit the GitHub issue to add it to the shared backlog.");
+  }
+
+  function buildSharedIssueUrl(question) {
+    const title = `[Clean Core Advisor Question] ${question.slice(0, 80)}`;
+    const body = [
+      "Question:",
+      "",
+      question,
+      "",
+      "Source:",
+      window.location.href,
+      "",
+      "Submitted:",
+      new Date().toISOString(),
+      "",
+      "Note:",
+      "Generated from the Clean Core Advisor shared backlog button."
+    ].join("\n");
+    const params = new URLSearchParams({
+      title,
+      body
+    });
+    return `https://github.com/sap-cloud-lab/sap-rasd-workbench/issues/new?${params.toString()}`;
   }
 
   function copyAnswer() {
